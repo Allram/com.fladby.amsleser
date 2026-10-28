@@ -8,12 +8,17 @@
     "measure_power",
     "meter_power.imported",
     "meter_power.exported",
+    "ams_day_import",
+    "ams_day_export",
     "measure_voltage.l1",
     "measure_voltage.l2",
     "measure_voltage.l3",
     "measure_current.l1",
     "measure_current.l2",
-    "measure_current.l3"
+    "measure_current.l3",
+    "ams_hour_usage",
+    "ams_month_max",
+    "ams_threshold"
   ],
   "capabilitiesOptions": {
     "meter_power.imported": {
@@ -64,6 +69,24 @@
       "title": {
         "en": "Current L3",
         "no": "Strøm L3"
+      }
+    },
+    "measure_power.l1": {
+      "title": {
+        "en": "Power L1",
+        "no": "Effekt L1"
+      }
+    },
+    "measure_power.l2": {
+      "title": {
+        "en": "Power L2",
+        "no": "Effekt L2"
+      }
+    },
+    "measure_power.l3": {
+      "title": {
+        "en": "Power L3",
+        "no": "Effekt L3"
       }
     }
   },
@@ -131,5 +154,6 @@
     "small": "{{driverAssetsPath}}/images/small.png",
     "large": "{{driverAssetsPath}}/images/large.png",
     "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
-  }
+  },
+  "discovery": "amsreader"
 }

@@ -1,6 +1,6 @@
 {
   "id": "com.fladby.amsleser",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "compatibility": ">=12.0.0",
   "sdk": 3,
   "brandColor": "#2E7D32",
@@ -27,5 +27,28 @@
     "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",
     "xlarge": "/assets/images/xlarge.png"
+  },
+  "tags": {
+    "en": [
+      "AMS",
+      "HAN",
+      "Smart meter",
+      "Power meter",
+      "Energy",
+      "Solar",
+      "Capacity tariff",
+      "amsleser"
+    ],
+    "no": [
+      "AMS",
+      "HAN",
+      "Strømmåler",
+      "Smartmåler",
+      "Energi",
+      "Solceller",
+      "Effekttrinn",
+      "Nettleie",
+      "amsleser"
+    ]
   }
 }

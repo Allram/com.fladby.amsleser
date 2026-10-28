@@ -1,0 +1,104 @@
+{
+  "triggers": [
+    {
+      "id": "meter_lost",
+      "title": {
+        "en": "Lost contact with the meter",
+        "no": "Mistet kontakt med måleren"
+      },
+      "hint": {
+        "en": "The reader is online, but no data has arrived from the meter for 30 seconds.",
+        "no": "Leseren svarer, men har ikke fått data fra måleren på 30 sekunder."
+      }
+    },
+    {
+      "id": "meter_restored",
+      "title": {
+        "en": "Contact with the meter restored",
+        "no": "Kontakt med måleren er tilbake"
+      }
+    },
+    {
+      "id": "hour_usage_exceeded",
+      "title": {
+        "en": "Usage this hour passed a limit",
+        "no": "Forbruket denne timen passerte en grense"
+      },
+      "titleFormatted": {
+        "en": "Usage this hour passed [[kwh]] kWh",
+        "no": "Forbruket denne timen passerte [[kwh]] kWh"
+      },
+      "tokens": [
+        {
+          "name": "usage",
+          "type": "number",
+          "title": {
+            "en": "Usage this hour (kWh)",
+            "no": "Forbruk denne timen (kWh)"
+          },
+          "example": 3.2
+        }
+      ],
+      "args": [
+        {
+          "name": "kwh",
+          "type": "number",
+          "min": 0,
+          "step": 0.1,
+          "placeholder": {
+            "en": "kWh"
+          }
+        }
+      ]
+    },
+    {
+      "id": "threshold_changed",
+      "title": {
+        "en": "Capacity step changed",
+        "no": "Effekttrinnet endret seg"
+      },
+      "tokens": [
+        {
+          "name": "threshold",
+          "type": "number",
+          "title": {
+            "en": "Capacity step (kW)",
+            "no": "Effekttrinn (kW)"
+          },
+          "example": 10
+        }
+      ]
+    }
+  ],
+  "conditions": [
+    {
+      "id": "meter_ok",
+      "title": {
+        "en": "Meter !{{is|is not}} sending data",
+        "no": "Måleren !{{sender|sender ikke}} data"
+      }
+    },
+    {
+      "id": "hour_usage_above",
+      "title": {
+        "en": "Usage this hour is !{{above|not above}} a limit",
+        "no": "Forbruket denne timen er !{{over|ikke over}} en grense"
+      },
+      "titleFormatted": {
+        "en": "Usage this hour is !{{above|not above}} [[kwh]] kWh",
+        "no": "Forbruket denne timen er !{{over|ikke over}} [[kwh]] kWh"
+      },
+      "args": [
+        {
+          "name": "kwh",
+          "type": "number",
+          "min": 0,
+          "step": 0.1,
+          "placeholder": {
+            "en": "kWh"
+          }
+        }
+      ]
+    }
+  ]
+}

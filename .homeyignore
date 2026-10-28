@@ -1,2 +1,5 @@
 node_modules/
 .homeybuild/
+test/
+tsconfig.test.json
+.forgejo/

@@ -1,0 +1,18 @@
+{
+  "type": "ssdp",
+  "ssdp": {
+    "search": "upnp:rootdevice"
+  },
+  "id": "{{headers.usn}}",
+  "conditions": [
+    [
+      {
+        "field": "headers.server",
+        "match": {
+          "type": "regex",
+          "value": "AMS reader"
+        }
+      }
+    ]
+  ]
+}

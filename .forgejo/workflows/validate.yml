@@ -1,0 +1,79 @@
+name: Validate Homey App
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Node 22 is the floor the project is typed for (engines >=22,
+  # @tsconfig/node22), so the unit tests run there too. The job image
+  # provides Node 22: a second actions/setup-node step in one job makes the
+  # runner fetch the action twice, and in run 55 the second fetch failed on
+  # the shared action cache ("shallow file has changed since we read it").
+  test-node22:
+    name: Unit tests (Node 22)
+    runs-on: docker
+    timeout-minutes: 15
+    container:
+      image: data.forgejo.org/oci/node:22
+    steps:
+      - name: Checkout
+        run: |
+          git init -q .
+          git remote add origin \
+            "https://actions:${{ github.token }}@kode.fladby.org/${{ github.repository }}.git"
+          git fetch -q --depth 1 origin "${GITHUB_SHA}"
+          git checkout -q --detach FETCH_HEAD
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run unit tests
+        run: npm test
+
+  validate:
+    runs-on: docker
+    timeout-minutes: 15
+    steps:
+      # Clone by hand with the run token in the URL (instance runs with
+      # REQUIRE_SIGNIN_VIEW). This works and is kept, but actions/checkout@v4
+      # also works against this instance: the "could not read Username"
+      # failures in August 2026 came from the Authelia bypass, fixed 2026-08-09.
+      - name: Checkout
+        run: |
+          git init -q .
+          git remote add origin \
+            "https://actions:${{ github.token }}@kode.fladby.org/${{ github.repository }}.git"
+          git fetch -q --depth 1 origin "${GITHUB_SHA}"
+          git checkout -q --detach FETCH_HEAD
+
+      # Node 24 is what Homey Pro runs (v24.21.0 on firmware 13.5, checked
+      # 2026-09-29) and what the Homey CLI requires (>=24). The unit tests
+      # also run on Node 22 in the test-node22 job.
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Validate Homey App (publish level)
+        run: npx homey app validate --level publish
+
+      # Validation rebuilds app.json from .homeycompose; a difference means
+      # the committed app.json is out of date.
+      - name: Committed app.json is up to date
+        run: git diff --exit-code app.json

@@ -1,0 +1,16 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Capacity average this month",
+    "no": "Effektsnitt denne måneden"
+  },
+  "units": {
+    "en": "kW"
+  },
+  "decimals": 2,
+  "getable": true,
+  "setable": false,
+  "insights": true,
+  "uiComponent": "sensor",
+  "icon": "/assets/peak.svg"
+}

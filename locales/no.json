@@ -1,11 +1,12 @@
 {
   "pair": {
-    "intro": "Skriv inn IP-adressen til AMS-leseren. Du finner den i ruteren eller på lesarens egen nettside.",
+    "intro": "Eller skriv inn IP-adressen til leseren. Du finner den i ruteren eller på leserens egen nettside.",
     "address": "IP-adresse eller vertsnavn",
     "username": "Brukernavn (bare hvis nettsiden er passordbeskyttet)",
     "password": "Passord",
     "connect": "Koble til",
     "failed": "Fikk ikke kontakt med AMS-leseren:",
-    "default_name": "AMS-leser"
+    "default_name": "AMS-leser",
+    "found": "AMS-lesere funnet på nettverket:"
   }
 }

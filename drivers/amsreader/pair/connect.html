@@ -14,6 +14,9 @@
     color: #fff; background: #0091ff; border: none; border-radius: 10px; cursor: pointer;
   }
   .pairing button:disabled { opacity: 0.6; cursor: default; }
+  .pairing .found { margin-bottom: 20px; }
+  .pairing .found button { margin-top: 0; margin-bottom: 8px; background: #2E7D32; text-align: left; }
+  .pairing .found small { display: block; font-weight: 400; opacity: 0.8; }
   .pairing .error {
     display: none; margin-top: 16px; padding: 12px 14px; font-size: 14px; border-radius: 10px;
     background: rgba(255, 99, 0, 0.12); color: #d33c19;
@@ -21,11 +24,18 @@
   @media (prefers-color-scheme: dark) {
     .pairing .intro { color: #9ca3af; }
     .pairing input { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); }
-    .pairing .error { color: #ff8a5c; }
+    .pairing .found { margin-bottom: 20px; }
+  .pairing .found button { margin-top: 0; margin-bottom: 8px; background: #2E7D32; text-align: left; }
+  .pairing .found small { display: block; font-weight: 400; opacity: 0.8; }
+  .pairing .error { color: #ff8a5c; }
   }
 </style>
 
 <div class="pairing">
+  <div id="found" class="found" style="display:none">
+    <p class="intro" data-i18n="pair.found"></p>
+    <div id="found-list"></div>
+  </div>
   <p class="intro" data-i18n="pair.intro"></p>
   <div class="field">
     <label for="address" data-i18n="pair.address"></label>
@@ -47,23 +57,46 @@
   var button = document.getElementById('connect');
   var errorBox = document.getElementById('error');
 
-  button.addEventListener('click', function () {
-    var address = document.getElementById('address').value.trim();
-    if (!address) return;
-    button.disabled = true;
+  function connect(request, clicked) {
+    clicked.disabled = true;
     errorBox.style.display = 'none';
-    Homey.emit('connect', {
-      address: address,
-      username: document.getElementById('username').value.trim(),
-      password: document.getElementById('password').value,
-    }).then(function (device) {
+    Homey.emit('connect', request).then(function (device) {
       return Homey.createDevice(device);
     }).then(function () {
       Homey.done();
     }).catch(function (err) {
       errorBox.textContent = Homey.__('pair.failed') + ' ' + (err && err.message ? err.message : err);
       errorBox.style.display = 'block';
-      button.disabled = false;
+      clicked.disabled = false;
     });
+  }
+
+  // Readers found on the network get a button each; manual entry stays below for the rest.
+  Homey.emit('discover').then(function (readers) {
+    if (!readers || !readers.length) return;
+    var list = document.getElementById('found-list');
+    readers.forEach(function (reader) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = reader.name;
+      var sub = document.createElement('small');
+      sub.textContent = reader.address;
+      b.appendChild(sub);
+      b.addEventListener('click', function () {
+        connect({ address: reader.address, ssdpId: reader.ssdpId }, b);
+      });
+      list.appendChild(b);
+    });
+    document.getElementById('found').style.display = 'block';
+  }).catch(function () {});
+
+  button.addEventListener('click', function () {
+    var address = document.getElementById('address').value.trim();
+    if (!address) return;
+    connect({
+      address: address,
+      username: document.getElementById('username').value.trim(),
+      password: document.getElementById('password').value,
+    }, button);
   });
 </script>

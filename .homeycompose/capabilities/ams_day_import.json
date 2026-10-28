@@ -1,0 +1,16 @@
+{
+  "type": "number",
+  "units": {
+    "en": "kWh"
+  },
+  "decimals": 2,
+  "getable": true,
+  "setable": false,
+  "insights": true,
+  "uiComponent": "sensor",
+  "title": {
+    "en": "Imported today",
+    "no": "Importert i dag"
+  },
+  "icon": "/assets/day.svg"
+}

@@ -1,11 +1,12 @@
 {
   "pair": {
-    "intro": "Enter the IP address of your AMS reader. You find it in your router or on the reader's own web page.",
+    "intro": "Or enter the IP address of the reader. You find it in your router or on the reader's own web page.",
     "address": "IP address or host name",
     "username": "Username (only if the web page is password protected)",
     "password": "Password",
     "connect": "Connect",
     "failed": "Could not reach the AMS reader:",
-    "default_name": "AMS reader"
+    "default_name": "AMS reader",
+    "found": "AMS readers found on your network:"
   }
 }

@@ -6,6 +6,20 @@ export interface AmsPhase {
   i: number; // current (A)
   p: number; // active import (W)
   q: number; // active export (W)
+  e?: boolean; // only on l2: true when the meter does not measure L2 current (IT networks)
+}
+
+export interface AmsPeriod {
+  u: number; // used (kWh)
+  p: number; // produced (kWh)
+}
+
+export interface AmsEnergy {
+  x: number; // average of this month's highest hours (kW), the base for the capacity step
+  t: number; // current capacity step (kW)
+  h: AmsPeriod; // this hour
+  d: AmsPeriod; // today
+  m: AmsPeriod; // this month
 }
 
 export interface AmsData {
@@ -18,7 +32,8 @@ export interface AmsData {
   l2: AmsPhase;
   l3: AmsPhase;
   t: number; // temperature (°C), -127 without a sensor
-  hm: number; // HAN status
+  hm: number; // HAN status, see meterOk() in values.ts
+  ea?: AmsEnergy;
   c: number; // device clock (epoch seconds)
 }
 

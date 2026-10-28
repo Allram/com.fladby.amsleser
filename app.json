@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.fladby.amsleser",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "compatibility": ">=12.0.0",
   "sdk": 3,
   "brandColor": "#2E7D32",
@@ -29,6 +29,171 @@
     "large": "/assets/images/large.png",
     "xlarge": "/assets/images/xlarge.png"
   },
+  "tags": {
+    "en": [
+      "AMS",
+      "HAN",
+      "Smart meter",
+      "Power meter",
+      "Energy",
+      "Solar",
+      "Capacity tariff",
+      "amsleser"
+    ],
+    "no": [
+      "AMS",
+      "HAN",
+      "Strømmåler",
+      "Smartmåler",
+      "Energi",
+      "Solceller",
+      "Effekttrinn",
+      "Nettleie",
+      "amsleser"
+    ]
+  },
+  "flow": {
+    "triggers": [
+      {
+        "id": "meter_lost",
+        "title": {
+          "en": "Lost contact with the meter",
+          "no": "Mistet kontakt med måleren"
+        },
+        "hint": {
+          "en": "The reader is online, but no data has arrived from the meter for 30 seconds.",
+          "no": "Leseren svarer, men har ikke fått data fra måleren på 30 sekunder."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=amsreader"
+          }
+        ]
+      },
+      {
+        "id": "meter_restored",
+        "title": {
+          "en": "Contact with the meter restored",
+          "no": "Kontakt med måleren er tilbake"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=amsreader"
+          }
+        ]
+      },
+      {
+        "id": "hour_usage_exceeded",
+        "title": {
+          "en": "Usage this hour passed a limit",
+          "no": "Forbruket denne timen passerte en grense"
+        },
+        "titleFormatted": {
+          "en": "Usage this hour passed [[kwh]] kWh",
+          "no": "Forbruket denne timen passerte [[kwh]] kWh"
+        },
+        "tokens": [
+          {
+            "name": "usage",
+            "type": "number",
+            "title": {
+              "en": "Usage this hour (kWh)",
+              "no": "Forbruk denne timen (kWh)"
+            },
+            "example": 3.2
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=amsreader"
+          },
+          {
+            "name": "kwh",
+            "type": "number",
+            "min": 0,
+            "step": 0.1,
+            "placeholder": {
+              "en": "kWh"
+            }
+          }
+        ]
+      },
+      {
+        "id": "threshold_changed",
+        "title": {
+          "en": "Capacity step changed",
+          "no": "Effekttrinnet endret seg"
+        },
+        "tokens": [
+          {
+            "name": "threshold",
+            "type": "number",
+            "title": {
+              "en": "Capacity step (kW)",
+              "no": "Effekttrinn (kW)"
+            },
+            "example": 10
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=amsreader"
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "meter_ok",
+        "title": {
+          "en": "Meter !{{is|is not}} sending data",
+          "no": "Måleren !{{sender|sender ikke}} data"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=amsreader"
+          }
+        ]
+      },
+      {
+        "id": "hour_usage_above",
+        "title": {
+          "en": "Usage this hour is !{{above|not above}} a limit",
+          "no": "Forbruket denne timen er !{{over|ikke over}} en grense"
+        },
+        "titleFormatted": {
+          "en": "Usage this hour is !{{above|not above}} [[kwh]] kWh",
+          "no": "Forbruket denne timen er !{{over|ikke over}} [[kwh]] kWh"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=amsreader"
+          },
+          {
+            "name": "kwh",
+            "type": "number",
+            "min": 0,
+            "step": 0.1,
+            "placeholder": {
+              "en": "kWh"
+            }
+          }
+        ]
+      }
+    ]
+  },
   "drivers": [
     {
       "name": {
@@ -40,12 +205,17 @@
         "measure_power",
         "meter_power.imported",
         "meter_power.exported",
+        "ams_day_import",
+        "ams_day_export",
         "measure_voltage.l1",
         "measure_voltage.l2",
         "measure_voltage.l3",
         "measure_current.l1",
         "measure_current.l2",
-        "measure_current.l3"
+        "measure_current.l3",
+        "ams_hour_usage",
+        "ams_month_max",
+        "ams_threshold"
       ],
       "capabilitiesOptions": {
         "meter_power.imported": {
@@ -96,6 +266,24 @@
           "title": {
             "en": "Current L3",
             "no": "Strøm L3"
+          }
+        },
+        "measure_power.l1": {
+          "title": {
+            "en": "Power L1",
+            "no": "Effekt L1"
+          }
+        },
+        "measure_power.l2": {
+          "title": {
+            "en": "Power L2",
+            "no": "Effekt L2"
+          }
+        },
+        "measure_power.l3": {
+          "title": {
+            "en": "Power L3",
+            "no": "Effekt L3"
           }
         }
       },
@@ -164,7 +352,110 @@
         "large": "/drivers/amsreader/assets/images/large.png",
         "xlarge": "/drivers/amsreader/assets/images/xlarge.png"
       },
+      "discovery": "amsreader",
       "id": "amsreader"
     }
-  ]
+  ],
+  "capabilities": {
+    "ams_day_export": {
+      "type": "number",
+      "units": {
+        "en": "kWh"
+      },
+      "decimals": 2,
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "title": {
+        "en": "Exported today",
+        "no": "Eksportert i dag"
+      },
+      "icon": "/assets/day.svg"
+    },
+    "ams_day_import": {
+      "type": "number",
+      "units": {
+        "en": "kWh"
+      },
+      "decimals": 2,
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "title": {
+        "en": "Imported today",
+        "no": "Importert i dag"
+      },
+      "icon": "/assets/day.svg"
+    },
+    "ams_hour_usage": {
+      "type": "number",
+      "title": {
+        "en": "Usage this hour",
+        "no": "Forbruk denne timen"
+      },
+      "units": {
+        "en": "kWh"
+      },
+      "decimals": 2,
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "icon": "/assets/hour.svg"
+    },
+    "ams_month_max": {
+      "type": "number",
+      "title": {
+        "en": "Capacity average this month",
+        "no": "Effektsnitt denne måneden"
+      },
+      "units": {
+        "en": "kW"
+      },
+      "decimals": 2,
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "icon": "/assets/peak.svg"
+    },
+    "ams_threshold": {
+      "type": "number",
+      "title": {
+        "en": "Capacity step",
+        "no": "Effekttrinn"
+      },
+      "units": {
+        "en": "kW"
+      },
+      "decimals": 0,
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "uiComponent": "sensor",
+      "icon": "/assets/peak.svg"
+    }
+  },
+  "discovery": {
+    "amsreader": {
+      "type": "ssdp",
+      "ssdp": {
+        "search": "upnp:rootdevice"
+      },
+      "id": "{{headers.usn}}",
+      "conditions": [
+        [
+          {
+            "field": "headers.server",
+            "match": {
+              "type": "regex",
+              "value": "AMS reader"
+            }
+          }
+        ]
+      ]
+    }
+  }
 }
