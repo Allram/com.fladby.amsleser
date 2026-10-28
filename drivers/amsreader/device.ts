@@ -63,9 +63,10 @@ class AmsReaderDevice extends Homey.Device {
       ['measure_voltage.l1', d.l1.u],
       ['measure_voltage.l2', d.l2.u],
       ['measure_voltage.l3', d.l3.u],
-      ['measure_current.l1', d.l1.i],
-      ['measure_current.l2', d.l2.i],
-      ['measure_current.l3', d.l3.i],
+      // Some meters (Aidon) send a signed current per phase; Homey shows the magnitude.
+      ['measure_current.l1', Math.abs(d.l1.i)],
+      ['measure_current.l2', Math.abs(d.l2.i)],
+      ['measure_current.l3', Math.abs(d.l3.i)],
     ];
     // Meters such as Aidon only send the counters once an hour, and the firmware reports 0
     // until the first one arrives. Writing that 0 would make Homey Energy see a reset.

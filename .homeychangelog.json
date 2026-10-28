@@ -1,4 +1,8 @@
 {
+  "0.1.1": {
+    "en": "Current per phase is always shown as a positive value.",
+    "no": "Strøm per fase vises alltid som positiv verdi."
+  },
   "0.1.0": {
     "en": "First test version: live power, meter readings and voltage/current per phase.",
     "no": "Første testversjon: effekt, målerstand og spenning/strøm per fase."
