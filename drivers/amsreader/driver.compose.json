@@ -17,55 +17,117 @@
   ],
   "capabilitiesOptions": {
     "meter_power.imported": {
-      "title": { "en": "Imported energy", "no": "Importert energi" }
+      "title": {
+        "en": "Imported energy",
+        "no": "Importert energi"
+      }
     },
     "meter_power.exported": {
-      "title": { "en": "Exported energy", "no": "Eksportert energi" }
+      "title": {
+        "en": "Exported energy",
+        "no": "Eksportert energi"
+      }
     },
-    "measure_voltage.l1": { "title": { "en": "Voltage L1", "no": "Spenning L1" } },
-    "measure_voltage.l2": { "title": { "en": "Voltage L2", "no": "Spenning L2" } },
-    "measure_voltage.l3": { "title": { "en": "Voltage L3", "no": "Spenning L3" } },
-    "measure_current.l1": { "title": { "en": "Current L1", "no": "Strøm L1" } },
-    "measure_current.l2": { "title": { "en": "Current L2", "no": "Strøm L2" } },
-    "measure_current.l3": { "title": { "en": "Current L3", "no": "Strøm L3" } }
+    "measure_voltage.l1": {
+      "title": {
+        "en": "Voltage L1",
+        "no": "Spenning L1"
+      }
+    },
+    "measure_voltage.l2": {
+      "title": {
+        "en": "Voltage L2",
+        "no": "Spenning L2"
+      }
+    },
+    "measure_voltage.l3": {
+      "title": {
+        "en": "Voltage L3",
+        "no": "Spenning L3"
+      }
+    },
+    "measure_current.l1": {
+      "title": {
+        "en": "Current L1",
+        "no": "Strøm L1"
+      }
+    },
+    "measure_current.l2": {
+      "title": {
+        "en": "Current L2",
+        "no": "Strøm L2"
+      }
+    },
+    "measure_current.l3": {
+      "title": {
+        "en": "Current L3",
+        "no": "Strøm L3"
+      }
+    }
   },
   "energy": {
     "cumulative": true,
     "cumulativeImportedCapability": "meter_power.imported",
     "cumulativeExportedCapability": "meter_power.exported"
   },
-  "platforms": ["local"],
-  "connectivity": ["lan"],
+  "platforms": [
+    "local"
+  ],
+  "connectivity": [
+    "lan"
+  ],
   "pair": [
-    { "id": "connect" }
+    {
+      "id": "connect"
+    }
   ],
   "settings": [
     {
       "id": "address",
       "type": "text",
-      "label": { "en": "IP address or host name", "no": "IP-adresse eller vertsnavn" },
+      "label": {
+        "en": "IP address or host name",
+        "no": "IP-adresse eller vertsnavn"
+      },
       "value": ""
     },
     {
       "id": "username",
       "type": "text",
-      "label": { "en": "Username (if the web UI is protected)", "no": "Brukernavn (hvis webgrensesnittet er passordbeskyttet)" },
+      "label": {
+        "en": "Username (if the web UI is protected)",
+        "no": "Brukernavn (hvis webgrensesnittet er passordbeskyttet)"
+      },
       "value": ""
     },
     {
       "id": "password",
       "type": "password",
-      "label": { "en": "Password", "no": "Passord" },
+      "label": {
+        "en": "Password",
+        "no": "Passord"
+      },
       "value": ""
     },
     {
       "id": "poll_interval",
       "type": "number",
-      "label": { "en": "Poll interval", "no": "Oppdateringsintervall" },
-      "units": { "en": "seconds", "no": "sekunder" },
+      "label": {
+        "en": "Poll interval",
+        "no": "Oppdateringsintervall"
+      },
+      "units": {
+        "en": "seconds",
+        "no": "sekunder"
+      },
       "value": 10,
       "min": 5,
       "max": 300
     }
-  ]
+  ],
+  "images": {
+    "small": "{{driverAssetsPath}}/images/small.png",
+    "large": "{{driverAssetsPath}}/images/large.png",
+    "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
+  }
 }

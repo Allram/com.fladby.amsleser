@@ -24,6 +24,11 @@
     "name": "Vegard Fladby",
     "email": "vegard.fladby@gmail.com"
   },
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
   "drivers": [
     {
       "name": {
@@ -152,6 +157,11 @@
           "max": 300
         }
       ],
+      "images": {
+        "small": "/drivers/amsreader/assets/images/small.png",
+        "large": "/drivers/amsreader/assets/images/large.png",
+        "xlarge": "/drivers/amsreader/assets/images/xlarge.png"
+      },
       "id": "amsreader"
     }
   ]
