@@ -20,13 +20,15 @@
       "title": {
         "en": "Imported energy",
         "no": "Importert energi"
-      }
+      },
+      "decimals": 2
     },
     "meter_power.exported": {
       "title": {
         "en": "Exported energy",
         "no": "Eksportert energi"
-      }
+      },
+      "decimals": 2
     },
     "measure_voltage.l1": {
       "title": {

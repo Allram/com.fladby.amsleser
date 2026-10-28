@@ -1,4 +1,8 @@
 {
+  "0.1.2": {
+    "en": "Energy readings are shown with two decimals.",
+    "no": "Målerstanden vises med to desimaler."
+  },
   "0.1.1": {
     "en": "Current per phase is always shown as a positive value.",
     "no": "Strøm per fase vises alltid som positiv verdi."
