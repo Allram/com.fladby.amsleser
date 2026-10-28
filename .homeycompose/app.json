@@ -1,0 +1,26 @@
+{
+  "id": "com.fladby.amsleser",
+  "version": "0.1.0",
+  "compatibility": ">=12.0.0",
+  "sdk": 3,
+  "brandColor": "#2E7D32",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "AMS reader",
+    "no": "AMS-leser"
+  },
+  "description": {
+    "en": "Live power and meter readings from your AMS reader.",
+    "no": "Strømforbruk og målerstand rett fra AMS-leseren."
+  },
+  "category": [
+    "energy"
+  ],
+  "permissions": [],
+  "author": {
+    "name": "Vegard Fladby",
+    "email": "vegard.fladby@gmail.com"
+  }
+}

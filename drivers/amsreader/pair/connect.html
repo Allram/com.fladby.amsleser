@@ -1,0 +1,69 @@
+<style type="text/css">
+  .pairing { max-width: 340px; margin: 0 auto; padding: 8px 4px; }
+  .pairing .intro { color: #6b7280; font-size: 14px; line-height: 1.5; margin: 0 0 20px; }
+  .pairing .field { margin-bottom: 16px; }
+  .pairing label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pairing input {
+    width: 100%; box-sizing: border-box; padding: 12px 14px; font-size: 16px;
+    border: 1px solid #d1d5db; border-radius: 10px; background: #fff; color: inherit;
+    outline: none; -webkit-appearance: none; appearance: none;
+  }
+  .pairing input:focus { border-color: #0091ff; box-shadow: 0 0 0 3px rgba(0, 145, 255, 0.15); }
+  .pairing button {
+    width: 100%; padding: 14px; margin-top: 8px; font-size: 16px; font-weight: 600;
+    color: #fff; background: #0091ff; border: none; border-radius: 10px; cursor: pointer;
+  }
+  .pairing button:disabled { opacity: 0.6; cursor: default; }
+  .pairing .error {
+    display: none; margin-top: 16px; padding: 12px 14px; font-size: 14px; border-radius: 10px;
+    background: rgba(255, 99, 0, 0.12); color: #d33c19;
+  }
+  @media (prefers-color-scheme: dark) {
+    .pairing .intro { color: #9ca3af; }
+    .pairing input { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); }
+    .pairing .error { color: #ff8a5c; }
+  }
+</style>
+
+<div class="pairing">
+  <p class="intro" data-i18n="pair.intro"></p>
+  <div class="field">
+    <label for="address" data-i18n="pair.address"></label>
+    <input type="text" id="address" placeholder="192.168.1.50" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="username" data-i18n="pair.username"></label>
+    <input type="text" id="username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="password" data-i18n="pair.password"></label>
+    <input type="password" id="password" autocomplete="off">
+  </div>
+  <button type="button" id="connect" data-i18n="pair.connect"></button>
+  <p id="error" class="error" role="alert" aria-live="assertive"></p>
+</div>
+
+<script type="text/javascript">
+  var button = document.getElementById('connect');
+  var errorBox = document.getElementById('error');
+
+  button.addEventListener('click', function () {
+    var address = document.getElementById('address').value.trim();
+    if (!address) return;
+    button.disabled = true;
+    errorBox.style.display = 'none';
+    Homey.emit('connect', {
+      address: address,
+      username: document.getElementById('username').value.trim(),
+      password: document.getElementById('password').value,
+    }).then(function (device) {
+      return Homey.createDevice(device);
+    }).then(function () {
+      Homey.done();
+    }).catch(function (err) {
+      errorBox.textContent = Homey.__('pair.failed') + ' ' + (err && err.message ? err.message : err);
+      errorBox.style.display = 'block';
+      button.disabled = false;
+    });
+  });
+</script>

@@ -1,0 +1,21 @@
+{
+  "name": "com.fladby.amsleser",
+  "version": "0.1.0",
+  "main": "app.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --ext .js,.ts --ignore-path .gitignore ."
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.5",
+    "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.12",
+    "@types/node": "^22.16.5",
+    "eslint": "^8.57.1",
+    "eslint-config-athom": "^4.0.2",
+    "homey": "^4.4.1",
+    "typescript": "^5.9.3"
+  }
+}
