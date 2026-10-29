@@ -1,5 +1,6 @@
 import Homey from 'homey';
-import { AmsClient, AmsError } from '../../lib/AmsClient';
+import { AmsClient } from '../../lib/AmsClient';
+import { AmsError } from '../../lib/AmsError';
 
 interface ConnectRequest {
   address: string;
@@ -42,12 +43,13 @@ class AmsReaderDriver extends Homey.Driver {
     }: ConnectRequest) => {
       const host = address.trim();
       const client = new AmsClient(host, username, password);
+      // One request at a time: the reader serves a single client.
       let sysinfo;
       try {
-        [sysinfo] = await Promise.all([client.getSysinfo(), client.getData()]);
+        sysinfo = await client.getSysinfo();
+        await client.getData();
       } catch (err) {
-        if (err instanceof AmsError) throw new Error(this.homey.__(`errors.${err.code}`, { host }));
-        throw err;
+        throw err instanceof AmsError ? new Error(err.localize(this.homey)) : err;
       }
       return {
         name: this.homey.__('pair.default_name'),

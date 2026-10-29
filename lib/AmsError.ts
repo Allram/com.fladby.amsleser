@@ -10,4 +10,9 @@ export class AmsError extends Error {
     this.code = code;
     this.host = host;
   }
+
+  // The message for the user, in Homey's language.
+  localize(homey: { __: (key: string, tags?: object) => string }): string {
+    return homey.__(`errors.${this.code}`, { host: this.host });
+  }
 }

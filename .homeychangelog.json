@@ -1,4 +1,8 @@
 {
+  "0.3.1": {
+    "en": "More reliable reading of slow readers, and a fix for the pairing page in dark mode.",
+    "no": "Mer stabil avlesning når leseren svarer tregt, og en rettelse på paringssiden i mørk modus."
+  },
   "0.3.0": {
     "en": "Readers are found automatically on more networks, clearer error messages when adding one, and an estimate of the current on L2 for meters that do not measure it.",
     "no": "Leseren blir funnet automatisk på flere nettverk, tydeligere feilmeldinger når du legger den til, og et anslag på strømmen på L2 for målere som ikke måler den."

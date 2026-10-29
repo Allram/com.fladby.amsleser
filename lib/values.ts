@@ -1,20 +1,29 @@
 import { AmsData, AmsPhase } from './AmsClient';
 
+function hasPower(phase: AmsPhase): boolean {
+  return phase.p !== 0 || phase.q !== 0;
+}
+
 // Meters disagree on the sign of the phase current (Aidon sends one that does not follow the
 // direction of power), so the sign is taken from the phase's power: negative while it exports.
 // Meters without power per phase get the sign of the total power.
 export function phaseCurrent(phase: AmsPhase, totalPower: number): number {
   const current = Math.abs(phase.i);
-  const power = phase.p !== 0 || phase.q !== 0 ? phase.p - phase.q : totalPower;
+  const power = hasPower(phase) ? phase.p - phase.q : totalPower;
   return power < 0 ? -current : current;
 }
 
 // HAN status from /data.json: 1 data within 15 s, 2 within 30 s or waiting for the first frame
 // after boot, 3 no data or error. Firmware before 2.6 used 0 for the wait after boot.
 export function meterOk(d: AmsData): boolean | undefined {
-  if (d.hm === 0) return undefined;
-  return d.hm === 1 || d.hm === 2;
+  return d.hm === 0 ? undefined : d.hm <= 2;
 }
+
+// Capabilities that depend on the meter and the reader: on a device only while a reading has
+// a value for them. The rest of the driver's capabilities are always there.
+export const OPTIONAL_CAPABILITIES = [
+  'measure_current.l2', 'measure_power.l1', 'measure_power.l2', 'measure_power.l3', 'measure_temperature',
+];
 
 // Meters on IT networks measure L1 and L3 only. With three wires the currents add up to zero,
 // so with the load evenly spread (L1 and L3 120° apart) |I2| = sqrt(I1² + I3² − I1·I3).
@@ -40,7 +49,7 @@ export function capabilityValues(d: AmsData, options: { estimateL2?: boolean } =
   else if (options.estimateL2) values.push(['measure_current.l2', estimateL2Current(d)]);
   // Not all meters send power per phase (Aidon does not); the firmware then reports 0.
   const phases = [d.l1, d.l2, d.l3];
-  if (phases.some((phase) => phase.p !== 0 || phase.q !== 0)) {
+  if (phases.some(hasPower)) {
     phases.forEach((phase, n) => values.push([`measure_power.l${n + 1}`, phase.p - phase.q]));
   }
   // Meters such as Aidon only send the counters once an hour, and the firmware reports 0

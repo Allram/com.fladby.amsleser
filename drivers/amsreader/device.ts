@@ -1,43 +1,34 @@
 import Homey from 'homey';
-import { AmsClient, AmsData, AmsError } from '../../lib/AmsClient';
-import { capabilityValues, meterOk } from '../../lib/values';
+import { AmsClient, AmsData } from '../../lib/AmsClient';
+import { AmsError } from '../../lib/AmsError';
+import { capabilityValues, meterOk, OPTIONAL_CAPABILITIES } from '../../lib/values';
 
 // The device is marked unavailable after this many polls in a row fail.
 const MAX_FAILURES = 3;
 
-// Capabilities that depend on the meter and the reader: added when /data.json has a value.
-const OPTIONAL = ['measure_temperature', 'measure_power.l1', 'measure_power.l2', 'measure_power.l3', 'measure_current.l2'];
-
 class AmsReaderDevice extends Homey.Device {
   private client!: AmsClient;
   private timer?: NodeJS.Timeout;
+  private polling = false;
   private failures = 0;
   private meterWasOk?: boolean;
   private lastHourUsage?: number;
   private lastThreshold?: number;
 
   async onInit() {
-    // Devices paired with an earlier version get the capabilities added since.
-    // measure_current.l2 is left out here, as update() removes it again on IT networks.
+    // Devices paired with an earlier version get the capabilities added since. The optional ones
+    // follow the readings in update().
     for (const cap of this.driver.manifest.capabilities as string[]) {
-      if (!this.hasCapability(cap) && cap !== 'measure_current.l2') await this.addCapability(cap);
+      if (!OPTIONAL_CAPABILITIES.includes(cap) && !this.hasCapability(cap)) await this.addCapability(cap);
     }
-    this.setupClient(this.getSettings());
-    this.startPolling(this.getSetting('poll_interval'));
+    this.restart(this.getSettings());
   }
 
-  async onSettings({ newSettings, changedKeys }: { newSettings: { [key: string]: any }; changedKeys: string[] }) {
-    // The capability is added again with its default title when the estimate is turned back on.
-    if (changedKeys.includes('estimate_l2')) await this.setStoreValue('l2Estimated', false);
-    this.setupClient(newSettings);
-    this.startPolling(newSettings.poll_interval);
+  async onSettings({ newSettings }: { newSettings: { [key: string]: any } }) {
+    this.restart(newSettings);
   }
 
   async onUninit() {
-    this.stopPolling();
-  }
-
-  async onDeleted() {
     this.stopPolling();
   }
 
@@ -63,17 +54,14 @@ class AmsReaderDevice extends Homey.Device {
     if (!address || address === this.getSetting('address')) return;
     this.log('Reader moved to', address);
     await this.setSettings({ address });
-    this.setupClient(this.getSettings());
-    this.poll().catch(this.error);
+    this.restart(this.getSettings());
   }
 
-  private setupClient(settings: { [key: string]: any }) {
+  // Builds the client from the settings and polls now and then every poll_interval seconds.
+  private restart(settings: { [key: string]: any }) {
     this.client = new AmsClient(settings.address, settings.username, settings.password);
-  }
-
-  private startPolling(intervalSeconds: number) {
     this.stopPolling();
-    this.timer = this.homey.setInterval(() => this.poll(), intervalSeconds * 1000);
+    this.timer = this.homey.setInterval(() => this.poll(), settings.poll_interval * 1000);
     this.poll().catch(this.error);
   }
 
@@ -83,46 +71,51 @@ class AmsReaderDevice extends Homey.Device {
   }
 
   private async poll() {
+    // The reader serves one client at a time, so a slow answer must not get a second request.
+    if (this.polling) return;
+    this.polling = true;
     try {
-      const data = await this.client.getData();
-      await this.update(data);
+      await this.update(await this.client.getData());
       this.failures = 0;
       if (!this.getAvailable()) await this.setAvailable();
     } catch (err) {
       this.failures++;
       this.error(`Poll failed (${this.failures}):`, (err as Error).message);
       if (this.failures >= MAX_FAILURES && this.getAvailable()) {
-        const message = err instanceof AmsError
-          ? this.homey.__(`errors.${err.code}`, { host: err.host })
-          : (err as Error).message;
+        const message = err instanceof AmsError ? err.localize(this.homey) : (err as Error).message;
         await this.setUnavailable(message).catch(this.error);
       }
+    } finally {
+      this.polling = false;
     }
   }
 
   private async update(d: AmsData) {
     const estimateL2 = d.l2.e === true && this.getSetting('estimate_l2') !== false;
     const values = capabilityValues(d, { estimateL2 });
-    for (const [cap] of values) {
-      if (OPTIONAL.includes(cap) && !this.hasCapability(cap)) await this.addCapability(cap);
-    }
-    // A meter that sends no power per phase while power flows never will (0.2.0 added these
-    // capabilities to every device).
-    if (d.w !== 0 && !values.some(([cap]) => cap === 'measure_power.l1')) {
-      for (const cap of ['measure_power.l1', 'measure_power.l2', 'measure_power.l3']) {
-        if (this.hasCapability(cap)) await this.removeCapability(cap);
-      }
-    }
-    // Meters in IT networks do not measure the L2 current: estimated, or left out.
-    if (d.l2.e && !estimateL2 && this.hasCapability('measure_current.l2')) await this.removeCapability('measure_current.l2');
-    if (estimateL2 && !this.getStoreValue('l2Estimated')) {
-      await this.setCapabilityOptions('measure_current.l2', { title: this.homey.__('capabilities.l2_estimated') });
-      await this.setStoreValue('l2Estimated', true);
-    }
+    await this.syncCapabilities(new Set(values.map(([cap]) => cap)), estimateL2);
     await Promise.all(values
-      .filter(([cap, value]) => this.hasCapability(cap) && this.getCapabilityValue(cap) !== value)
+      .filter(([cap, value]) => this.getCapabilityValue(cap) !== value)
       .map(([cap, value]) => this.setCapabilityValue(cap, value)));
     await this.fireTriggers(d);
+  }
+
+  // Adds the optional capabilities this reading has a value for. Only L2 current is removed
+  // again, since it goes for good (no estimate on an IT network); the others can be missing
+  // from a single reading, and removing a capability deletes its Insights history.
+  private async syncCapabilities(present: Set<string>, estimateL2: boolean) {
+    for (const cap of OPTIONAL_CAPABILITIES) {
+      if (present.has(cap) && !this.hasCapability(cap)) await this.addCapability(cap);
+    }
+    if (!present.has('measure_current.l2') && this.hasCapability('measure_current.l2')) {
+      await this.removeCapability('measure_current.l2');
+    }
+    if (estimateL2) {
+      const title = this.homey.__('capabilities.l2_estimated');
+      if (this.getCapabilityOptions('measure_current.l2').title !== title) {
+        await this.setCapabilityOptions('measure_current.l2', { title });
+      }
+    }
   }
 
   private async fireTriggers(d: AmsData) {

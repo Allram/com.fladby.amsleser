@@ -3,8 +3,6 @@
 
 import { AmsError } from './AmsError';
 
-export { AmsError };
-
 export interface AmsPhase {
   u: number; // voltage (V)
   i: number; // current (A)
@@ -23,12 +21,9 @@ export interface AmsEnergy {
   t: number; // current capacity step (kW)
   h: AmsPeriod; // this hour
   d: AmsPeriod; // today
-  m: AmsPeriod; // this month
 }
 
 export interface AmsData {
-  i: number; // active import (W)
-  e: number; // active export (W)
   w: number; // import minus export (W)
   ic: number; // import counter (kWh)
   ec: number; // export counter (kWh)
@@ -38,28 +33,23 @@ export interface AmsData {
   t: number; // temperature (°C), -127 without a sensor
   hm: number; // HAN status, see meterOk() in values.ts
   ea?: AmsEnergy;
-  c: number; // device clock (epoch seconds)
 }
 
 export interface AmsSysinfo {
-  version: string;
   chipId: string;
   mac: string;
   hostname: string;
-  meter: { mfg: number; model: string; id: string };
 }
 
 const TIMEOUT_MS = 10000;
 
 export class AmsClient {
   private readonly host: string;
-  private readonly username: string;
-  private readonly password: string;
+  private readonly headers: Record<string, string> = {};
 
   constructor(host: string, username = '', password = '') {
     this.host = host;
-    this.username = username;
-    this.password = password;
+    if (username) this.headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
   }
 
   getData(): Promise<AmsData> {
@@ -71,13 +61,9 @@ export class AmsClient {
   }
 
   private async getJson<T>(path: string): Promise<T> {
-    const headers: Record<string, string> = {};
-    if (this.username) {
-      headers.Authorization = `Basic ${Buffer.from(`${this.username}:${this.password}`).toString('base64')}`;
-    }
     let res: Response;
     try {
-      res = await fetch(`http://${this.host}${path}`, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
+      res = await fetch(`http://${this.host}${path}`, { headers: this.headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
     } catch (err) {
       const { name } = (err as Error);
       throw new AmsError(name === 'TimeoutError' || name === 'AbortError' ? 'timeout' : 'unreachable', this.host, err as Error);

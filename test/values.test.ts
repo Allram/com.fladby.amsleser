@@ -10,8 +10,6 @@ function data(overrides: Partial<AmsData> = {}): AmsData {
     u: 230, i: 2, p: 460, q: 0,
   };
   return {
-    i: 1380,
-    e: 0,
     w: 1380,
     ic: 1000.5,
     ec: 20.25,
@@ -20,9 +18,8 @@ function data(overrides: Partial<AmsData> = {}): AmsData {
     l3: { ...phase },
     t: -127,
     hm: 1,
-    c: 0,
     ea: {
-      x: 4.2, t: 5, h: { u: 0.8, p: 0 }, d: { u: 12.3, p: 4.5 }, m: { u: 300, p: 50 },
+      x: 4.2, t: 5, h: { u: 0.8, p: 0 }, d: { u: 12.3, p: 4.5 },
     },
     ...overrides,
   };
