@@ -1,5 +1,5 @@
 import Homey from 'homey';
-import { AmsClient } from '../../lib/AmsClient';
+import { AmsClient, AmsError } from '../../lib/AmsClient';
 
 interface ConnectRequest {
   address: string;
@@ -22,14 +22,18 @@ class AmsReaderDriver extends Homey.Driver {
   }
 
   async onPair(session: Homey.Driver.PairSession) {
-    // Readers found with SSDP, for the list on the pairing page. The host name comes from the
-    // reader itself, since the SSDP headers differ between the ESP8266 and ESP32 builds.
+    // Readers found with SSDP (the driver's strategy, which also follows a reader to a new IP)
+    // and mDNS, for the list on the pairing page. Only addresses that answer /sysinfo.json are
+    // kept, since the mDNS search for http services also finds other devices named ams-*.
     session.setHandler('discover', async () => {
-      const results = Object.values(this.getDiscoveryStrategy().getDiscoveryResults()) as Homey.DiscoveryResultSSDP[];
-      return Promise.all(results.map(async (result) => {
-        const sysinfo = await new AmsClient(result.address).getSysinfo().catch(() => undefined);
-        return { address: result.address, ssdpId: result.id, name: sysinfo?.hostname || result.address };
+      const found = new Map<string, string | undefined>();
+      for (const result of this.discoveryResults('amsreader-mdns')) found.set(result.address, undefined);
+      for (const result of this.discoveryResults('amsreader')) found.set(result.address, result.id);
+      const readers = await Promise.all([...found].map(async ([address, ssdpId]) => {
+        const sysinfo = await new AmsClient(address).getSysinfo().catch(() => undefined);
+        return sysinfo?.chipId ? { address, ssdpId, name: sysinfo.hostname || address } : undefined;
       }));
+      return readers.filter((reader) => reader !== undefined);
     });
 
     // Tests the connection and returns the device for Homey.createDevice() on the pairing page.
@@ -38,7 +42,13 @@ class AmsReaderDriver extends Homey.Driver {
     }: ConnectRequest) => {
       const host = address.trim();
       const client = new AmsClient(host, username, password);
-      const [sysinfo] = await Promise.all([client.getSysinfo(), client.getData()]);
+      let sysinfo;
+      try {
+        [sysinfo] = await Promise.all([client.getSysinfo(), client.getData()]);
+      } catch (err) {
+        if (err instanceof AmsError) throw new Error(this.homey.__(`errors.${err.code}`, { host }));
+        throw err;
+      }
       return {
         name: this.homey.__('pair.default_name'),
         data: { id: sysinfo.chipId || sysinfo.mac || host },
@@ -46,6 +56,15 @@ class AmsReaderDriver extends Homey.Driver {
         settings: { address: host, username, password },
       };
     });
+  }
+
+  private discoveryResults(strategyId: string): { address: string; id: string }[] {
+    try {
+      return Object.values(this.homey.discovery.getStrategy(strategyId).getDiscoveryResults());
+    } catch (err) {
+      this.error(`Discovery ${strategyId}:`, (err as Error).message);
+      return [];
+    }
   }
 }
 

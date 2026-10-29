@@ -114,16 +114,24 @@
         "en": "IP address or host name",
         "no": "IP-adresse eller vertsnavn"
       },
-      "value": ""
+      "value": "",
+      "hint": {
+        "en": "The address of the AMS reader on your network. Readers found automatically follow a new address by themselves.",
+        "no": "Adressen til AMS-leseren på nettverket. Lesere som ble funnet automatisk, følger selv med når adressen endrer seg."
+      }
     },
     {
       "id": "username",
       "type": "text",
       "label": {
-        "en": "Username (if the web UI is protected)",
-        "no": "Brukernavn (hvis webgrensesnittet er passordbeskyttet)"
+        "en": "Username",
+        "no": "Brukernavn"
       },
-      "value": ""
+      "value": "",
+      "hint": {
+        "en": "Only needed when the web page of the reader is password protected.",
+        "no": "Trengs bare når nettsiden til leseren er passordbeskyttet."
+      }
     },
     {
       "id": "password",
@@ -147,7 +155,24 @@
       },
       "value": 10,
       "min": 5,
-      "max": 300
+      "max": 300,
+      "hint": {
+        "en": "How often Homey reads the reader. The meter sends new values every 2 to 10 seconds.",
+        "no": "Hvor ofte Homey leser av leseren. Måleren sender nye verdier hvert 2. til 10. sekund."
+      }
+    },
+    {
+      "id": "estimate_l2",
+      "type": "checkbox",
+      "value": true,
+      "label": {
+        "en": "Estimate current L2",
+        "no": "Anslå strøm L2"
+      },
+      "hint": {
+        "en": "Meters on IT networks (230 V without neutral) do not measure the current on L2. When this is on, it is estimated from L1 and L3 as if the load were evenly spread over the phases, so treat it as a guide only.",
+        "no": "Målere på IT-nett (230 V uten nøytralleder) måler ikke strømmen på L2. Når dette er på, anslås den ut fra L1 og L3 som om lasten var jevnt fordelt på fasene, så se på den som en pekepinn."
+      }
     }
   ],
   "images": {

@@ -1,12 +1,12 @@
 import Homey from 'homey';
-import { AmsClient, AmsData } from '../../lib/AmsClient';
+import { AmsClient, AmsData, AmsError } from '../../lib/AmsClient';
 import { capabilityValues, meterOk } from '../../lib/values';
 
 // The device is marked unavailable after this many polls in a row fail.
 const MAX_FAILURES = 3;
 
 // Capabilities that depend on the meter and the reader: added when /data.json has a value.
-const OPTIONAL = ['measure_temperature', 'measure_power.l1', 'measure_power.l2', 'measure_power.l3'];
+const OPTIONAL = ['measure_temperature', 'measure_power.l1', 'measure_power.l2', 'measure_power.l3', 'measure_current.l2'];
 
 class AmsReaderDevice extends Homey.Device {
   private client!: AmsClient;
@@ -26,7 +26,9 @@ class AmsReaderDevice extends Homey.Device {
     this.startPolling(this.getSetting('poll_interval'));
   }
 
-  async onSettings({ newSettings }: { newSettings: { [key: string]: any } }) {
+  async onSettings({ newSettings, changedKeys }: { newSettings: { [key: string]: any }; changedKeys: string[] }) {
+    // The capability is added again with its default title when the estimate is turned back on.
+    if (changedKeys.includes('estimate_l2')) await this.setStoreValue('l2Estimated', false);
     this.setupClient(newSettings);
     this.startPolling(newSettings.poll_interval);
   }
@@ -90,13 +92,17 @@ class AmsReaderDevice extends Homey.Device {
       this.failures++;
       this.error(`Poll failed (${this.failures}):`, (err as Error).message);
       if (this.failures >= MAX_FAILURES && this.getAvailable()) {
-        await this.setUnavailable((err as Error).message).catch(this.error);
+        const message = err instanceof AmsError
+          ? this.homey.__(`errors.${err.code}`, { host: err.host })
+          : (err as Error).message;
+        await this.setUnavailable(message).catch(this.error);
       }
     }
   }
 
   private async update(d: AmsData) {
-    const values = capabilityValues(d);
+    const estimateL2 = d.l2.e === true && this.getSetting('estimate_l2') !== false;
+    const values = capabilityValues(d, { estimateL2 });
     for (const [cap] of values) {
       if (OPTIONAL.includes(cap) && !this.hasCapability(cap)) await this.addCapability(cap);
     }
@@ -107,8 +113,12 @@ class AmsReaderDevice extends Homey.Device {
         if (this.hasCapability(cap)) await this.removeCapability(cap);
       }
     }
-    // Meters in IT networks do not measure the L2 current.
-    if (d.l2.e && this.hasCapability('measure_current.l2')) await this.removeCapability('measure_current.l2');
+    // Meters in IT networks do not measure the L2 current: estimated, or left out.
+    if (d.l2.e && !estimateL2 && this.hasCapability('measure_current.l2')) await this.removeCapability('measure_current.l2');
+    if (estimateL2 && !this.getStoreValue('l2Estimated')) {
+      await this.setCapabilityOptions('measure_current.l2', { title: this.homey.__('capabilities.l2_estimated') });
+      await this.setStoreValue('l2Estimated', true);
+    }
     await Promise.all(values
       .filter(([cap, value]) => this.hasCapability(cap) && this.getCapabilityValue(cap) !== value)
       .map(([cap, value]) => this.setCapabilityValue(cap, value)));

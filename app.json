@@ -1,10 +1,12 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.fladby.amsleser",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "compatibility": ">=12.0.0",
   "sdk": 3,
   "brandColor": "#2E7D32",
+  "source": "https://github.com/Allram/com.fladby.amsleser",
+  "support": "https://github.com/Allram/com.fladby.amsleser/issues",
   "platforms": [
     "local"
   ],
@@ -13,22 +15,12 @@
     "no": "AMS-leser"
   },
   "description": {
-    "en": "Live power and meter readings from your AMS reader.",
-    "no": "Strømforbruk og målerstand rett fra AMS-leseren."
+    "en": "Your power use, live.",
+    "no": "Strømforbruket ditt, direkte."
   },
   "category": [
     "energy"
   ],
-  "permissions": [],
-  "author": {
-    "name": "Vegard Fladby",
-    "email": "vegard.fladby@gmail.com"
-  },
-  "images": {
-    "small": "/assets/images/small.png",
-    "large": "/assets/images/large.png",
-    "xlarge": "/assets/images/xlarge.png"
-  },
   "tags": {
     "en": [
       "AMS",
@@ -51,6 +43,19 @@
       "Nettleie",
       "amsleser"
     ]
+  },
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Vegard Fladby",
+    "email": "vegard.fladby@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/Allram/com.fladby.amsleser/issues"
   },
   "flow": {
     "triggers": [
@@ -101,8 +106,8 @@
             "name": "usage",
             "type": "number",
             "title": {
-              "en": "Usage this hour (kWh)",
-              "no": "Forbruk denne timen (kWh)"
+              "en": "Usage this hour in kWh",
+              "no": "Forbruk denne timen i kWh"
             },
             "example": 3.2
           }
@@ -122,7 +127,11 @@
               "en": "kWh"
             }
           }
-        ]
+        ],
+        "hint": {
+          "en": "Fires once each hour, when the energy used so far this hour passes the limit.",
+          "no": "Starter én gang i timen, når energien brukt så langt denne timen passerer grensen."
+        }
       },
       {
         "id": "threshold_changed",
@@ -135,12 +144,16 @@
             "name": "threshold",
             "type": "number",
             "title": {
-              "en": "Capacity step (kW)",
-              "no": "Effekttrinn (kW)"
+              "en": "Capacity step in kW",
+              "no": "Effekttrinn i kW"
             },
             "example": 10
           }
         ],
+        "hint": {
+          "en": "The capacity step is set up on the reader and follows the average of the highest hours this month.",
+          "no": "Effekttrinnene settes opp på leseren og følger snittet av månedens høyeste timer."
+        },
         "args": [
           {
             "type": "device",
@@ -311,16 +324,24 @@
             "en": "IP address or host name",
             "no": "IP-adresse eller vertsnavn"
           },
-          "value": ""
+          "value": "",
+          "hint": {
+            "en": "The address of the AMS reader on your network. Readers found automatically follow a new address by themselves.",
+            "no": "Adressen til AMS-leseren på nettverket. Lesere som ble funnet automatisk, følger selv med når adressen endrer seg."
+          }
         },
         {
           "id": "username",
           "type": "text",
           "label": {
-            "en": "Username (if the web UI is protected)",
-            "no": "Brukernavn (hvis webgrensesnittet er passordbeskyttet)"
+            "en": "Username",
+            "no": "Brukernavn"
           },
-          "value": ""
+          "value": "",
+          "hint": {
+            "en": "Only needed when the web page of the reader is password protected.",
+            "no": "Trengs bare når nettsiden til leseren er passordbeskyttet."
+          }
         },
         {
           "id": "password",
@@ -344,7 +365,24 @@
           },
           "value": 10,
           "min": 5,
-          "max": 300
+          "max": 300,
+          "hint": {
+            "en": "How often Homey reads the reader. The meter sends new values every 2 to 10 seconds.",
+            "no": "Hvor ofte Homey leser av leseren. Måleren sender nye verdier hvert 2. til 10. sekund."
+          }
+        },
+        {
+          "id": "estimate_l2",
+          "type": "checkbox",
+          "value": true,
+          "label": {
+            "en": "Estimate current L2",
+            "no": "Anslå strøm L2"
+          },
+          "hint": {
+            "en": "Meters on IT networks (230 V without neutral) do not measure the current on L2. When this is on, it is estimated from L1 and L3 as if the load were evenly spread over the phases, so treat it as a guide only.",
+            "no": "Målere på IT-nett (230 V uten nøytralleder) måler ikke strømmen på L2. Når dette er på, anslås den ut fra L1 og L3 som om lasten var jevnt fordelt på fasene, så se på den som en pekepinn."
+          }
         }
       ],
       "images": {
@@ -442,7 +480,7 @@
     "amsreader": {
       "type": "ssdp",
       "ssdp": {
-        "search": "upnp:rootdevice"
+        "search": "ssdp:all"
       },
       "id": "{{headers.usn}}",
       "conditions": [
@@ -452,6 +490,25 @@
             "match": {
               "type": "regex",
               "value": "AMS reader"
+            }
+          }
+        ]
+      ]
+    },
+    "amsreader-mdns": {
+      "type": "mdns-sd",
+      "mdns-sd": {
+        "name": "http",
+        "protocol": "tcp"
+      },
+      "id": "{{name}}",
+      "conditions": [
+        [
+          {
+            "field": "name",
+            "match": {
+              "type": "regex",
+              "value": "^ams-"
             }
           }
         ]

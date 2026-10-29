@@ -2,9 +2,11 @@ import { AmsData, AmsPhase } from './AmsClient';
 
 // Meters disagree on the sign of the phase current (Aidon sends one that does not follow the
 // direction of power), so the sign is taken from the phase's power: negative while it exports.
-export function phaseCurrent(phase: AmsPhase): number {
+// Meters without power per phase get the sign of the total power.
+export function phaseCurrent(phase: AmsPhase, totalPower: number): number {
   const current = Math.abs(phase.i);
-  return phase.p - phase.q < 0 ? -current : current;
+  const power = phase.p !== 0 || phase.q !== 0 ? phase.p - phase.q : totalPower;
+  return power < 0 ? -current : current;
 }
 
 // HAN status from /data.json: 1 data within 15 s, 2 within 30 s or waiting for the first frame
@@ -14,18 +16,28 @@ export function meterOk(d: AmsData): boolean | undefined {
   return d.hm === 1 || d.hm === 2;
 }
 
+// Meters on IT networks measure L1 and L3 only. With three wires the currents add up to zero,
+// so with the load evenly spread (L1 and L3 120° apart) |I2| = sqrt(I1² + I3² − I1·I3).
+export function estimateL2Current(d: AmsData): number {
+  const i1 = Math.abs(d.l1.i);
+  const i3 = Math.abs(d.l3.i);
+  const current = Math.round(Math.sqrt(Math.max(0, i1 * i1 + i3 * i3 - i1 * i3)) * 100) / 100;
+  return d.w < 0 ? -current : current;
+}
+
 // The capability values one /data.json reading gives, as [capability, value] pairs.
-export function capabilityValues(d: AmsData): [string, number][] {
+export function capabilityValues(d: AmsData, options: { estimateL2?: boolean } = {}): [string, number][] {
   // Power is import minus export, so it goes negative while solar panels export.
   const values: [string, number][] = [
     ['measure_power', d.w],
     ['measure_voltage.l1', d.l1.u],
     ['measure_voltage.l2', d.l2.u],
     ['measure_voltage.l3', d.l3.u],
-    ['measure_current.l1', phaseCurrent(d.l1)],
-    ['measure_current.l3', phaseCurrent(d.l3)],
+    ['measure_current.l1', phaseCurrent(d.l1, d.w)],
+    ['measure_current.l3', phaseCurrent(d.l3, d.w)],
   ];
-  if (!d.l2.e) values.push(['measure_current.l2', phaseCurrent(d.l2)]);
+  if (!d.l2.e) values.push(['measure_current.l2', phaseCurrent(d.l2, d.w)]);
+  else if (options.estimateL2) values.push(['measure_current.l2', estimateL2Current(d)]);
   // Not all meters send power per phase (Aidon does not); the firmware then reports 0.
   const phases = [d.l1, d.l2, d.l3];
   if (phases.some((phase) => phase.p !== 0 || phase.q !== 0)) {

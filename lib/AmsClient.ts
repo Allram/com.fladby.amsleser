@@ -1,6 +1,10 @@
 // HTTP client for the amsreader firmware's web API (github.com/UtilitechAS/amsreader-firmware).
 // /data.json uses the short keys the firmware's own web UI reads; only the ones we use are typed.
 
+import { AmsError } from './AmsError';
+
+export { AmsError };
+
 export interface AmsPhase {
   u: number; // voltage (V)
   i: number; // current (A)
@@ -71,9 +75,19 @@ export class AmsClient {
     if (this.username) {
       headers.Authorization = `Basic ${Buffer.from(`${this.username}:${this.password}`).toString('base64')}`;
     }
-    const res = await fetch(`http://${this.host}${path}`, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
-    if (res.status === 401) throw new Error('Wrong username or password');
-    if (!res.ok) throw new Error(`HTTP ${res.status} from ${path}`);
-    return await res.json() as T;
+    let res: Response;
+    try {
+      res = await fetch(`http://${this.host}${path}`, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
+    } catch (err) {
+      const { name } = (err as Error);
+      throw new AmsError(name === 'TimeoutError' || name === 'AbortError' ? 'timeout' : 'unreachable', this.host, err as Error);
+    }
+    if (res.status === 401) throw new AmsError('auth', this.host);
+    if (!res.ok) throw new AmsError('not_reader', this.host);
+    try {
+      return await res.json() as T;
+    } catch (err) {
+      throw new AmsError('not_reader', this.host, err as Error);
+    }
   }
 }

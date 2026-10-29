@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { AmsData } from '../lib/AmsClient';
-import { capabilityValues, meterOk, phaseCurrent } from '../lib/values';
+import {
+  capabilityValues, estimateL2Current, meterOk, phaseCurrent,
+} from '../lib/values';
 
 function data(overrides: Partial<AmsData> = {}): AmsData {
   const phase = {
@@ -53,10 +55,17 @@ test('phase power only when the meter sends it, L2 current not on IT networks', 
 test('phase current takes its sign from the phase power, not from the meter', () => {
   assert.equal(phaseCurrent({
     u: 230, i: -1.5, p: 345, q: 0,
-  }), 1.5);
+  }, -500), 1.5);
   assert.equal(phaseCurrent({
     u: 230, i: 1.5, p: 0, q: 345,
-  }), -1.5);
+  }, 500), -1.5);
+  // Without power per phase (Aidon) the total power decides.
+  assert.equal(phaseCurrent({
+    u: 230, i: -1.5, p: 0, q: 0,
+  }, 600), 1.5);
+  assert.equal(phaseCurrent({
+    u: 230, i: 1.5, p: 0, q: 0,
+  }, -600), -1.5);
 });
 
 test('daily import and export come from the energy accounting', () => {
@@ -83,4 +92,30 @@ test('meter status', () => {
   assert.equal(meterOk(data({ hm: 2 })), true);
   assert.equal(meterOk(data({ hm: 3 })), false);
   assert.equal(meterOk(data({ hm: 0 })), undefined);
+});
+
+test('L2 current is estimated on IT networks when asked for', () => {
+  const it = data({
+    l1: {
+      u: 236, i: 3.2, p: 0, q: 0,
+    },
+    l2: {
+      u: 237, i: 0, p: 0, q: 0, e: true,
+    },
+    l3: {
+      u: 234, i: -1.5, p: 0, q: 0,
+    },
+  });
+  assert.equal(estimateL2Current(it), 2.77);
+  assert.equal(asMap(it).has('measure_current.l2'), false);
+  assert.equal(new Map(capabilityValues(it, { estimateL2: true })).get('measure_current.l2'), 2.77);
+  // Balanced load: all three currents equal.
+  assert.equal(estimateL2Current(data({
+    l1: {
+      u: 230, i: 5, p: 0, q: 0,
+    },
+    l3: {
+      u: 230, i: 5, p: 0, q: 0,
+    },
+  })), 5);
 });

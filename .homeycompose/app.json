@@ -1,9 +1,11 @@
 {
   "id": "com.fladby.amsleser",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "compatibility": ">=12.0.0",
   "sdk": 3,
   "brandColor": "#2E7D32",
+  "source": "https://github.com/Allram/com.fladby.amsleser",
+  "support": "https://github.com/Allram/com.fladby.amsleser/issues",
   "platforms": [
     "local"
   ],
@@ -12,22 +14,12 @@
     "no": "AMS-leser"
   },
   "description": {
-    "en": "Live power and meter readings from your AMS reader.",
-    "no": "Strømforbruk og målerstand rett fra AMS-leseren."
+    "en": "Your power use, live.",
+    "no": "Strømforbruket ditt, direkte."
   },
   "category": [
     "energy"
   ],
-  "permissions": [],
-  "author": {
-    "name": "Vegard Fladby",
-    "email": "vegard.fladby@gmail.com"
-  },
-  "images": {
-    "small": "/assets/images/small.png",
-    "large": "/assets/images/large.png",
-    "xlarge": "/assets/images/xlarge.png"
-  },
   "tags": {
     "en": [
       "AMS",
@@ -50,5 +42,18 @@
       "Nettleie",
       "amsleser"
     ]
+  },
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Vegard Fladby",
+    "email": "vegard.fladby@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/Allram/com.fladby.amsleser/issues"
   }
 }

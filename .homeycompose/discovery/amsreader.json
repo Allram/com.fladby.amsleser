@@ -1,7 +1,7 @@
 {
   "type": "ssdp",
   "ssdp": {
-    "search": "upnp:rootdevice"
+    "search": "ssdp:all"
   },
   "id": "{{headers.usn}}",
   "conditions": [

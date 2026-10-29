@@ -1,4 +1,8 @@
 {
+  "0.3.0": {
+    "en": "Readers are found automatically on more networks, clearer error messages when adding one, and an estimate of the current on L2 for meters that do not measure it.",
+    "no": "Leseren blir funnet automatisk på flere nettverk, tydeligere feilmeldinger når du legger den til, og et anslag på strømmen på L2 for målere som ikke måler den."
+  },
   "0.2.0": {
     "en": "Solar support: power and current go negative while you export. New: imported and exported energy today, power per phase, usage this hour, capacity step, flow cards, and automatic discovery of readers on the network.",
     "no": "Støtte for solceller: effekt og strøm blir negativ når du selger strøm. Nytt: importert og eksportert energi i dag, effekt per fase, forbruk denne timen, effekttrinn, flowkort, og leseren blir funnet automatisk på nettverket."

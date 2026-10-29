@@ -5,8 +5,19 @@
     "username": "Username (only if the web page is password protected)",
     "password": "Password",
     "connect": "Connect",
-    "failed": "Could not reach the AMS reader:",
+    "failed": "Could not add the AMS reader.",
     "default_name": "AMS reader",
-    "found": "AMS readers found on your network:"
+    "found": "AMS readers found on your network:",
+    "searching": "Looking for AMS readers on your network …",
+    "none_found": "No AMS readers were found automatically. Enter the IP address below."
+  },
+  "errors": {
+    "timeout": "No answer from {{host}}. Check the IP address, and that the reader is powered and on the same network as Homey.",
+    "unreachable": "Could not reach {{host}}. Check the IP address, and that the reader is powered and on the same network as Homey.",
+    "auth": "Wrong username or password for the web page of the reader.",
+    "not_reader": "{{host}} answered, but does not look like an AMS reader."
+  },
+  "capabilities": {
+    "l2_estimated": "Current L2, estimated"
   }
 }

@@ -32,8 +32,8 @@
 </style>
 
 <div class="pairing">
-  <div id="found" class="found" style="display:none">
-    <p class="intro" data-i18n="pair.found"></p>
+  <div class="found">
+    <p id="found-status" class="intro" data-i18n="pair.searching"></p>
     <div id="found-list"></div>
   </div>
   <p class="intro" data-i18n="pair.intro"></p>
@@ -65,15 +65,20 @@
     }).then(function () {
       Homey.done();
     }).catch(function (err) {
-      errorBox.textContent = Homey.__('pair.failed') + ' ' + (err && err.message ? err.message : err);
+      errorBox.textContent = err && err.message ? err.message : Homey.__('pair.failed');
       errorBox.style.display = 'block';
       clicked.disabled = false;
     });
   }
 
   // Readers found on the network get a button each; manual entry stays below for the rest.
+  var status = document.getElementById('found-status');
   Homey.emit('discover').then(function (readers) {
-    if (!readers || !readers.length) return;
+    if (!readers || !readers.length) {
+      status.textContent = Homey.__('pair.none_found');
+      return;
+    }
+    status.textContent = Homey.__('pair.found');
     var list = document.getElementById('found-list');
     readers.forEach(function (reader) {
       var b = document.createElement('button');
@@ -87,8 +92,9 @@
       });
       list.appendChild(b);
     });
-    document.getElementById('found').style.display = 'block';
-  }).catch(function () {});
+  }).catch(function () {
+    status.textContent = Homey.__('pair.none_found');
+  });
 
   button.addEventListener('click', function () {
     var address = document.getElementById('address').value.trim();

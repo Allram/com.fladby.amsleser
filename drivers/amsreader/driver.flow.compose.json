@@ -33,8 +33,8 @@
           "name": "usage",
           "type": "number",
           "title": {
-            "en": "Usage this hour (kWh)",
-            "no": "Forbruk denne timen (kWh)"
+            "en": "Usage this hour in kWh",
+            "no": "Forbruk denne timen i kWh"
           },
           "example": 3.2
         }
@@ -49,7 +49,11 @@
             "en": "kWh"
           }
         }
-      ]
+      ],
+      "hint": {
+        "en": "Fires once each hour, when the energy used so far this hour passes the limit.",
+        "no": "Starter én gang i timen, når energien brukt så langt denne timen passerer grensen."
+      }
     },
     {
       "id": "threshold_changed",
@@ -62,12 +66,16 @@
           "name": "threshold",
           "type": "number",
           "title": {
-            "en": "Capacity step (kW)",
-            "no": "Effekttrinn (kW)"
+            "en": "Capacity step in kW",
+            "no": "Effekttrinn i kW"
           },
           "example": 10
         }
-      ]
+      ],
+      "hint": {
+        "en": "The capacity step is set up on the reader and follows the average of the highest hours this month.",
+        "no": "Effekttrinnene settes opp på leseren og følger snittet av månedens høyeste timer."
+      }
     }
   ],
   "conditions": [

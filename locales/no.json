@@ -5,8 +5,19 @@
     "username": "Brukernavn (bare hvis nettsiden er passordbeskyttet)",
     "password": "Passord",
     "connect": "Koble til",
-    "failed": "Fikk ikke kontakt med AMS-leseren:",
+    "failed": "Fikk ikke lagt til AMS-leseren.",
     "default_name": "AMS-leser",
-    "found": "AMS-lesere funnet på nettverket:"
+    "found": "AMS-lesere funnet på nettverket:",
+    "searching": "Søker etter AMS-lesere på nettverket …",
+    "none_found": "Fant ingen AMS-lesere automatisk. Skriv inn IP-adressen under."
+  },
+  "errors": {
+    "timeout": "Fikk ikke svar fra {{host}}. Sjekk IP-adressen, og at leseren har strøm og er på samme nettverk som Homey.",
+    "unreachable": "Fikk ikke kontakt med {{host}}. Sjekk IP-adressen, og at leseren har strøm og er på samme nettverk som Homey.",
+    "auth": "Feil brukernavn eller passord til nettsiden til leseren.",
+    "not_reader": "{{host}} svarte, men ser ikke ut som en AMS-leser."
+  },
+  "capabilities": {
+    "l2_estimated": "Strøm L2, anslått"
   }
 }
