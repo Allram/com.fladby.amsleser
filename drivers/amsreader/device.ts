@@ -36,8 +36,9 @@ class AmsReaderDevice extends Homey.Device {
     this.stopPolling();
   }
 
-  // Discovery: follow the reader to a new IP address. Only devices paired from the
-  // discovery list have the SSDP id; manually added ones keep their address.
+  // Discovery: follow the reader to a new IP address (see updateAddress for what is checked).
+  // Only devices paired from the discovery list have the SSDP id; manually added ones keep
+  // their address.
   onDiscoveryResult(result: Homey.DiscoveryResultSSDP) {
     return result.id === this.getStoreValue('ssdpId');
   }
@@ -54,15 +55,39 @@ class AmsReaderDevice extends Homey.Device {
     return this.meterWasOk !== false;
   }
 
+  // Discovery is not authenticated: any device on the network can claim the reader's SSDP id.
+  // A reader with a login is therefore never moved automatically, so its password only goes to
+  // an address the user entered; without one, the new address must answer as the same reader.
   private async updateAddress(address: string) {
-    if (!address || address === this.getSetting('address')) return;
+    if (!address) return;
+    if (address === this.getSetting('address')) {
+      await this.unsetWarning().catch(this.error);
+      return;
+    }
+    if (await this.keepForLogin(address)) return;
+    const sysinfo = await new AmsClient(address).getSysinfo().catch(() => undefined);
+    const { id } = this.getData();
+    if (!sysinfo || (sysinfo.chipId !== id && sysinfo.mac !== id)) {
+      this.log('Ignored', address, '- does not answer as this reader');
+      return;
+    }
+    // A login may have been added while the new address was asked.
+    if (await this.keepForLogin(address)) return;
     this.log('Reader moved to', address);
     await this.setSettings({ address });
     this.restart(this.getSettings());
   }
 
+  private async keepForLogin(address: string): Promise<boolean> {
+    if (!this.getSetting('username')) return false;
+    this.log('Reader with a login reported at', address, '- not moved');
+    await this.setWarning(this.homey.__('warnings.moved_login', { address })).catch(this.error);
+    return true;
+  }
+
   // Builds the client from the settings and polls now and then every poll_interval seconds.
   private restart(settings: { [key: string]: any }) {
+    this.unsetWarning().catch(this.error);
     this.client = new AmsClient(settings.address, settings.username, settings.password);
     // Read from the new settings, as onSettings() runs before getSetting() returns them.
     this.estimateL2 = settings.estimate_l2 !== false;

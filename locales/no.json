@@ -32,5 +32,8 @@
   },
   "capabilities": {
     "l2_estimated": "Strøm L2, anslått"
+  },
+  "warnings": {
+    "moved_login": "Leseren ser ut til å ha flyttet til {{address}}. Den har passord, så adressen endres ikke automatisk. Sjekk adressen i innstillingene."
   }
 }

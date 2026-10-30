@@ -63,7 +63,10 @@ export class AmsClient {
   private async getJson<T>(path: string): Promise<T> {
     let res: Response;
     try {
-      res = await fetch(`http://${this.host}${path}`, { headers: this.headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
+      res = await fetch(`http://${this.host}${path}`, {
+        // The firmware never redirects these endpoints; following one could take the login elsewhere.
+        headers: this.headers, redirect: 'error', signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
     } catch (err) {
       const { name } = (err as Error);
       throw new AmsError(name === 'TimeoutError' || name === 'AbortError' ? 'timeout' : 'unreachable', this.host, err as Error);

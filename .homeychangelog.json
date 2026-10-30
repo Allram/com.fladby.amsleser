@@ -1,4 +1,8 @@
 {
+  "0.5.0": {
+    "en": "Safer on shared networks: a reader with a password is no longer moved to a new address on its own, so its password only goes to the address you entered. If it seems to have moved, the device shows a warning with the new address. A reader without a password is only followed when the new address answers as the same reader.",
+    "no": "Tryggere på delte nettverk: en leser med passord flyttes ikke lenger til en ny adresse av seg selv, så passordet bare sendes til adressen du har skrevet inn. Ser den ut til å ha flyttet, viser enheten et varsel med den nye adressen. En leser uten passord følges bare når den nye adressen svarer som samme leser."
+  },
   "0.4.0": {
     "en": "Simpler pairing: readers found on your network are added with one tap and get their own name, the same reader is listed only once, you see when it is connecting, errors appear where you tapped, and you can search again. A reader with a password asks for it instead of failing. Changed settings also take effect right away, empty power tiles per phase are removed on meters that do not send them, and the L2 current no longer says estimated once the meter measures it.",
     "no": "Enklere å legge til leseren: lesere på nettverket legges til med ett trykk og får sitt eget navn, samme leser vises bare én gang, du ser når den kobler til, feil vises der du trykket, og du kan søke på nytt. En leser med passord ber om det i stedet for å feile. Endrede innstillinger virker dessuten med en gang, tomme effektfelt per fase fjernes på målere som ikke sender dem, og strøm L2 står ikke lenger som anslått når måleren måler den."

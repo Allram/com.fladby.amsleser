@@ -32,5 +32,8 @@
   },
   "capabilities": {
     "l2_estimated": "Current L2, estimated"
+  },
+  "warnings": {
+    "moved_login": "The reader seems to have moved to {{address}}. It has a password, so the address is not changed automatically. Check the address in the settings."
   }
 }

@@ -55,11 +55,15 @@ class AmsReaderDriver extends Homey.Driver {
         .map(async ([address, ssdpId]) => {
           const sysinfo = await new AmsClient(address).getSysinfo().catch(() => undefined);
           if (!sysinfo?.chipId) return;
+          // The SSDP id stays with the address that answered with it, so a device that copies
+          // another reader's chipId cannot lend that reader its own id. Two IPv4 addresses with
+          // the same chipId are both listed, so a copy cannot hide the real reader either.
+          const reader = { address, ssdpId, name: sysinfo.hostname || address };
           const known = readers.get(sysinfo.chipId);
           if (!known || (known.address.includes(':') && !address.includes(':'))) {
-            readers.set(sysinfo.chipId, { address, ssdpId: ssdpId ?? known?.ssdpId, name: sysinfo.hostname || address });
-          } else if (!known.ssdpId) {
-            known.ssdpId = ssdpId;
+            readers.set(sysinfo.chipId, reader);
+          } else if (!known.address.includes(':') && !address.includes(':')) {
+            readers.set(`${sysinfo.chipId}@${address}`, reader);
           }
         }));
       return [...readers.values()];
