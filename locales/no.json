@@ -1,21 +1,34 @@
 {
   "pair": {
-    "intro": "Eller skriv inn IP-adressen til leseren. Du finner den i ruteren eller på leserens egen nettside.",
+    "searching": "Søker etter AMS-lesere på nettverket …",
+    "found_one": "Fant én AMS-leser på nettverket. Trykk på den for å legge den til.",
+    "found_many": "Fant {{count}} AMS-lesere på nettverket. Trykk på den du vil legge til.",
+    "none_found": "Fant ingen AMS-lesere automatisk. Skriv inn adressen under.",
+    "other_address": "Bruk en annen adresse",
+    "intro": "Se etter en enhet som heter «ams-…» i ruteren eller ruterappen, under tilkoblede enheter.",
     "address": "IP-adresse eller vertsnavn",
-    "username": "Brukernavn (bare hvis nettsiden er passordbeskyttet)",
+    "address_example": "f.eks. 192.168.1.50",
+    "username": "Brukernavn",
     "password": "Passord",
     "connect": "Koble til",
+    "connecting": "Kobler til …",
     "failed": "Fikk ikke lagt til AMS-leseren.",
     "default_name": "AMS-leser",
-    "found": "AMS-lesere funnet på nettverket:",
-    "searching": "Søker etter AMS-lesere på nettverket …",
-    "none_found": "Fant ingen AMS-lesere automatisk. Skriv inn IP-adressen under."
+    "search_again": "Søk på nytt",
+    "connecting_to": "Kobler til {{name}} …",
+    "address_missing": "Skriv inn adressen til leseren først.",
+    "found_one_short": "Fant én AMS-leser på nettverket.",
+    "found_many_short": "Fant {{count}} AMS-lesere på nettverket.",
+    "login_needed": "Leseren trenger brukernavn og passord.",
+    "login_hint": "Står under «Sikkerhet» («Security») i innstillingene på nettsiden til leseren."
   },
   "errors": {
     "timeout": "Fikk ikke svar fra {{host}}. Sjekk IP-adressen, og at leseren har strøm og er på samme nettverk som Homey.",
     "unreachable": "Fikk ikke kontakt med {{host}}. Sjekk IP-adressen, og at leseren har strøm og er på samme nettverk som Homey.",
-    "auth": "Feil brukernavn eller passord til nettsiden til leseren.",
-    "not_reader": "{{host}} svarte, men ser ikke ut som en AMS-leser."
+    "auth": "Feil brukernavn eller passord for nettsiden til leseren.",
+    "not_reader": "{{host}} svarte, men ser ikke ut som en AMS-leser.",
+    "auth_required": "{{host}} er passordbeskyttet. Skriv inn brukernavnet og passordet du bruker på nettsiden til leseren.",
+    "found_unreachable": "{{host}} ble funnet på nettverket, men svarte ikke nå. Vent litt og prøv igjen, eller sjekk at leseren har strøm."
   },
   "capabilities": {
     "l2_estimated": "Strøm L2, anslått"

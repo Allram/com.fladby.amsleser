@@ -10,6 +10,9 @@ class AmsReaderDevice extends Homey.Device {
   private client!: AmsClient;
   private timer?: NodeJS.Timeout;
   private polling = false;
+  // Bumped by restart() and onUninit(), so a poll that was under way drops its result.
+  private generation = 0;
+  private estimateL2 = true;
   private failures = 0;
   private meterWasOk?: boolean;
   private lastHourUsage?: number;
@@ -29,6 +32,7 @@ class AmsReaderDevice extends Homey.Device {
   }
 
   async onUninit() {
+    this.generation++;
     this.stopPolling();
   }
 
@@ -60,6 +64,9 @@ class AmsReaderDevice extends Homey.Device {
   // Builds the client from the settings and polls now and then every poll_interval seconds.
   private restart(settings: { [key: string]: any }) {
     this.client = new AmsClient(settings.address, settings.username, settings.password);
+    // Read from the new settings, as onSettings() runs before getSetting() returns them.
+    this.estimateL2 = settings.estimate_l2 !== false;
+    this.generation++;
     this.stopPolling();
     this.timer = this.homey.setInterval(() => this.poll(), settings.poll_interval * 1000);
     this.poll().catch(this.error);
@@ -74,11 +81,15 @@ class AmsReaderDevice extends Homey.Device {
     // The reader serves one client at a time, so a slow answer must not get a second request.
     if (this.polling) return;
     this.polling = true;
+    const { generation } = this;
     try {
-      await this.update(await this.client.getData());
+      const data = await this.client.getData();
+      if (generation !== this.generation) return;
+      await this.update(data);
       this.failures = 0;
       if (!this.getAvailable()) await this.setAvailable();
     } catch (err) {
+      if (generation !== this.generation) return;
       this.failures++;
       this.error(`Poll failed (${this.failures}):`, (err as Error).message);
       if (this.failures >= MAX_FAILURES && this.getAvailable()) {
@@ -87,13 +98,15 @@ class AmsReaderDevice extends Homey.Device {
       }
     } finally {
       this.polling = false;
+      // The settings changed while waiting: poll the new ones now, unless the device is gone.
+      if (generation !== this.generation && this.timer) this.poll().catch(this.error);
     }
   }
 
   private async update(d: AmsData) {
-    const estimateL2 = d.l2.e === true && this.getSetting('estimate_l2') !== false;
+    const estimateL2 = d.l2.e === true && this.estimateL2;
     const values = capabilityValues(d, { estimateL2 });
-    await this.syncCapabilities(new Set(values.map(([cap]) => cap)), estimateL2);
+    await this.syncCapabilities(new Set(values.map(([cap]) => cap)), estimateL2, d.w !== 0);
     await Promise.all(values
       .filter(([cap, value]) => this.getCapabilityValue(cap) !== value)
       .map(([cap, value]) => this.setCapabilityValue(cap, value)));
@@ -103,18 +116,28 @@ class AmsReaderDevice extends Homey.Device {
   // Adds the optional capabilities this reading has a value for. Only L2 current is removed
   // again, since it goes for good (no estimate on an IT network); the others can be missing
   // from a single reading, and removing a capability deletes its Insights history.
-  private async syncCapabilities(present: Set<string>, estimateL2: boolean) {
+  private async syncCapabilities(present: Set<string>, estimateL2: boolean, powerFlows: boolean) {
     for (const cap of OPTIONAL_CAPABILITIES) {
       if (present.has(cap) && !this.hasCapability(cap)) await this.addCapability(cap);
     }
-    if (!present.has('measure_current.l2') && this.hasCapability('measure_current.l2')) {
-      await this.removeCapability('measure_current.l2');
-    }
-    if (estimateL2) {
-      const title = this.homey.__('capabilities.l2_estimated');
-      if (this.getCapabilityOptions('measure_current.l2').title !== title) {
-        await this.setCapabilityOptions('measure_current.l2', { title });
+    // 0.2.0 added power per phase to every device. A meter that sends none while power flows
+    // never will.
+    if (powerFlows && !present.has('measure_power.l1')) {
+      for (const cap of ['measure_power.l1', 'measure_power.l2', 'measure_power.l3']) {
+        if (this.hasCapability(cap)) await this.removeCapability(cap);
       }
+    }
+    if (!present.has('measure_current.l2')) {
+      if (this.hasCapability('measure_current.l2')) await this.removeCapability('measure_current.l2');
+      return;
+    }
+    // The title says when L2 is estimated, and goes back to the default once it is measured.
+    const estimated = this.homey.__('capabilities.l2_estimated');
+    const { title } = this.getCapabilityOptions('measure_current.l2');
+    if (estimateL2 ? title !== estimated : title === estimated) {
+      await this.setCapabilityOptions('measure_current.l2', {
+        title: estimateL2 ? estimated : this.driver.manifest.capabilitiesOptions['measure_current.l2'].title,
+      });
     }
   }
 

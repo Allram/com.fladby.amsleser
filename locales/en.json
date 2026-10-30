@@ -1,21 +1,34 @@
 {
   "pair": {
-    "intro": "Or enter the IP address of the reader. You find it in your router or on the reader's own web page.",
+    "searching": "Looking for AMS readers on your network …",
+    "found_one": "Found one AMS reader on your network. Tap it to add it.",
+    "found_many": "Found {{count}} AMS readers on your network. Tap the reader to add.",
+    "none_found": "No AMS readers were found automatically. Enter the address below.",
+    "other_address": "Use another address",
+    "intro": "Look in your router or its app for a device named “ams-…”, under connected devices.",
     "address": "IP address or host name",
-    "username": "Username (only if the web page is password protected)",
+    "address_example": "e.g. 192.168.1.50",
+    "username": "Username",
     "password": "Password",
     "connect": "Connect",
+    "connecting": "Connecting …",
     "failed": "Could not add the AMS reader.",
     "default_name": "AMS reader",
-    "found": "AMS readers found on your network:",
-    "searching": "Looking for AMS readers on your network …",
-    "none_found": "No AMS readers were found automatically. Enter the IP address below."
+    "search_again": "Search again",
+    "connecting_to": "Connecting to {{name}} …",
+    "address_missing": "Enter the address of the reader first.",
+    "found_one_short": "Found one AMS reader on your network.",
+    "found_many_short": "Found {{count}} AMS readers on your network.",
+    "login_needed": "The reader needs a username and password.",
+    "login_hint": "Set under “Security” in the settings on the reader's web page."
   },
   "errors": {
     "timeout": "No answer from {{host}}. Check the IP address, and that the reader is powered and on the same network as Homey.",
     "unreachable": "Could not reach {{host}}. Check the IP address, and that the reader is powered and on the same network as Homey.",
-    "auth": "Wrong username or password for the web page of the reader.",
-    "not_reader": "{{host}} answered, but does not look like an AMS reader."
+    "auth": "Wrong username or password for the reader's web page.",
+    "not_reader": "{{host}} answered, but does not look like an AMS reader.",
+    "auth_required": "{{host}} is password protected. Enter the username and password you use for the reader's web page.",
+    "found_unreachable": "{{host}} was found on your network but did not answer just now. Wait a moment and try again, or check that the reader has power."
   },
   "capabilities": {
     "l2_estimated": "Current L2, estimated"

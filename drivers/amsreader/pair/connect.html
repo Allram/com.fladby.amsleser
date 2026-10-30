@@ -1,105 +1,392 @@
 <style type="text/css">
-  .pairing { max-width: 340px; margin: 0 auto; padding: 8px 4px; }
-  .pairing .intro { color: #6b7280; font-size: 14px; line-height: 1.5; margin: 0 0 20px; }
-  .pairing .field { margin-bottom: 16px; }
-  .pairing label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-  .pairing input {
-    width: 100%; box-sizing: border-box; padding: 12px 14px; font-size: 16px;
-    border: 1px solid #d1d5db; border-radius: 10px; background: #fff; color: inherit;
-    outline: none; -webkit-appearance: none; appearance: none;
+  /* Fields and buttons use Homey's own classes, so the view follows the Homey app's theme.
+     Only what Homey has no class for is styled here, in colours that read on light and dark. */
+  .ams-pair { max-width: 360px; margin: 0 auto; padding: 8px 0; }
+  .ams-pair [hidden] { display: none !important; }
+  .ams-status {
+    display: flex; align-items: center; gap: 10px;
+    margin: 0 0 12px; font-size: 15px; line-height: 1.45; text-wrap: pretty;
   }
-  .pairing input:focus { border-color: #0091ff; box-shadow: 0 0 0 3px rgba(0, 145, 255, 0.15); }
-  .pairing button {
-    width: 100%; padding: 14px; margin-top: 8px; font-size: 16px; font-weight: 600;
-    color: #fff; background: #0091ff; border: none; border-radius: 10px; cursor: pointer;
+  .ams-spinner {
+    flex: none; width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid rgba(127, 127, 127, 0.35); border-top-color: currentColor;
+    animation: ams-spin 0.8s linear infinite;
   }
-  .pairing button:disabled { opacity: 0.6; cursor: default; }
-  .pairing .found { margin-bottom: 20px; }
-  .pairing .found button { margin-top: 0; margin-bottom: 8px; background: #2E7D32; text-align: left; }
-  .pairing .found small { display: block; font-weight: 400; opacity: 0.8; }
-  .pairing .error {
-    display: none; margin-top: 16px; padding: 12px 14px; font-size: 14px; border-radius: 10px;
-    background: rgba(255, 99, 0, 0.12); color: #d33c19;
+  @keyframes ams-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .ams-spinner { animation: none; } }
+
+  .ams-readers { list-style: none; margin: 0 0 16px; padding: 0; }
+  .ams-readers li + li { margin-top: 8px; }
+  .ams-reader {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px;
+    box-sizing: border-box; padding: 10px 14px; border: 0; border-radius: 12px;
+    background: rgba(127, 127, 127, 0.12); color: inherit; font: inherit; text-align: left; cursor: pointer;
   }
-  @media (prefers-color-scheme: dark) {
-    .pairing .intro { color: #9ca3af; }
-    .pairing input { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); }
-    .pairing .error { color: #ff8a5c; }
+  .ams-reader:active { background: rgba(127, 127, 127, 0.2); }
+  .ams-reader-text { flex: 1; min-width: 0; }
+  .ams-reader-name { display: block; font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+  .ams-reader-address { display: block; margin-top: 2px; font-size: 14px; opacity: 0.75; overflow-wrap: anywhere; }
+  .ams-reader svg { flex: none; width: 20px; height: 20px; opacity: 0.6; }
+  .ams-reader .ams-spinner { width: 18px; height: 18px; }
+  /* While one reader connects, the others and the links visibly rest. */
+  .ams-reader:disabled:not(.is-busy), .ams-link:disabled { opacity: 0.45; cursor: default; }
+
+  .ams-links { display: flex; flex-wrap: wrap; column-gap: 24px; }
+  .ams-link {
+    display: block; min-height: 44px; margin: 4px 0 8px; padding: 0; border: 0; background: none;
+    color: inherit; font: inherit; font-size: 15px; font-weight: 600;
+    text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
   }
+  #manual { margin-top: 12px; }
+  .ams-hint { margin: 6px 0 0; font-size: 14px; line-height: 1.45; opacity: 0.75; text-wrap: pretty; }
+  .ams-pair input[aria-invalid="true"] { box-shadow: inset 0 0 0 2px #d14900; }
+  /* The login opens under the reader it is for, or in the manual form. */
+  .ams-readers #login { margin: 12px 0 4px; }
+  .ams-note, .ams-error {
+    margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; font-size: 15px; line-height: 1.45;
+    text-wrap: pretty;
+  }
+  .ams-note { background: rgba(127, 127, 127, 0.12); }
+  .ams-error {
+    margin-top: 12px;
+    background: rgba(255, 99, 0, 0.14); box-shadow: inset 0 0 0 1px rgba(209, 73, 0, 0.55);
+  }
+  .ams-reader:focus-visible, .ams-link:focus-visible { outline: 2px solid #0070cc; outline-offset: 3px; }
 </style>
 
-<div class="pairing">
-  <div class="found">
-    <p id="found-status" class="intro" data-i18n="pair.searching"></p>
-    <div id="found-list"></div>
+<form id="form" class="homey-form ams-pair" novalidate>
+  <p id="status" class="ams-status" role="status" aria-live="polite">
+    <span id="status-spinner" class="ams-spinner" aria-hidden="true"></span>
+    <span id="status-text"></span>
+  </p>
+  <ul id="readers" class="ams-readers" hidden></ul>
+  <div class="ams-links">
+    <button type="button" id="show-manual" class="ams-link" data-i18n="pair.other_address" hidden></button>
+    <button type="button" id="search-again" class="ams-link" data-i18n="pair.search_again" hidden></button>
   </div>
-  <p class="intro" data-i18n="pair.intro"></p>
-  <div class="field">
-    <label for="address" data-i18n="pair.address"></label>
-    <input type="text" id="address" placeholder="192.168.1.50" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+
+  <div id="manual" hidden>
+    <div class="homey-form-group">
+      <label class="homey-form-label" for="address" data-i18n="pair.address"></label>
+      <input class="homey-form-input" type="text" id="address" inputmode="url" enterkeyhint="go" aria-describedby="address-hint" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <p id="address-hint" class="ams-hint" data-i18n="pair.intro"></p>
+    </div>
+    <div id="login" hidden>
+      <p id="login-note" class="ams-note"></p>
+      <div class="homey-form-group">
+        <label class="homey-form-label" for="username" data-i18n="pair.username"></label>
+        <input class="homey-form-input" type="text" id="username" enterkeyhint="next" aria-describedby="login-note login-hint" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <p id="login-hint" class="ams-hint" data-i18n="pair.login_hint"></p>
+      </div>
+      <div class="homey-form-group">
+        <label class="homey-form-label" for="password" data-i18n="pair.password"></label>
+        <input class="homey-form-input" type="password" id="password" enterkeyhint="go" autocomplete="current-password">
+      </div>
+      <button type="submit" id="login-connect" class="homey-button-primary-full" data-i18n="pair.connect" hidden></button>
+    </div>
+    <button type="submit" id="connect" class="homey-button-primary-full" data-i18n="pair.connect"></button>
   </div>
-  <div class="field">
-    <label for="username" data-i18n="pair.username"></label>
-    <input type="text" id="username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-  </div>
-  <div class="field">
-    <label for="password" data-i18n="pair.password"></label>
-    <input type="password" id="password" autocomplete="off">
-  </div>
-  <button type="button" id="connect" data-i18n="pair.connect"></button>
-  <p id="error" class="error" role="alert" aria-live="assertive"></p>
-</div>
+
+  <p id="error" class="ams-error" role="alert" hidden></p>
+</form>
 
 <script type="text/javascript">
-  var button = document.getElementById('connect');
-  var errorBox = document.getElementById('error');
+  (function () {
+    // Everything stays inside this function: a global named "status" would be window.status.
+    function byId(id) { return document.getElementById(id); }
+    var form = byId('form');
+    var readerList = byId('readers');
+    var searchAgain = byId('search-again');
+    var showManual = byId('show-manual');
+    var manual = byId('manual');
+    var address = byId('address');
+    var login = byId('login');
+    var username = byId('username');
+    var password = byId('password');
+    var loginConnect = byId('login-connect');
+    var connectButton = byId('connect');
+    var errorBox = byId('error');
+    var busy = false;
+    var searching = false;
+    var found = 0;
+    // The found reader the login under its row is for; null while the login is in the manual form.
+    var loginFor = null;
 
-  function connect(request, clicked) {
-    clicked.disabled = true;
-    errorBox.style.display = 'none';
-    Homey.emit('connect', request).then(function (device) {
-      return Homey.createDevice(device);
-    }).then(function () {
-      Homey.done();
-    }).catch(function (err) {
-      errorBox.textContent = err && err.message ? err.message : Homey.__('pair.failed');
-      errorBox.style.display = 'block';
-      clicked.disabled = false;
-    });
-  }
+    address.placeholder = Homey.__('pair.address_example');
 
-  // Readers found on the network get a button each; manual entry stays below for the rest.
-  var status = document.getElementById('found-status');
-  Homey.emit('discover').then(function (readers) {
-    if (!readers || !readers.length) {
-      status.textContent = Homey.__('pair.none_found');
-      return;
+    function setStatus(text, working) {
+      byId('status-text').textContent = text;
+      byId('status-spinner').hidden = !working;
     }
-    status.textContent = Homey.__('pair.found');
-    var list = document.getElementById('found-list');
-    readers.forEach(function (reader) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = reader.name;
-      var sub = document.createElement('small');
-      sub.textContent = reader.address;
-      b.appendChild(sub);
-      b.addEventListener('click', function () {
-        connect({ address: reader.address, ssdpId: reader.ssdpId }, b);
-      });
-      list.appendChild(b);
-    });
-  }).catch(function () {
-    status.textContent = Homey.__('pair.none_found');
-  });
 
-  button.addEventListener('click', function () {
-    var address = document.getElementById('address').value.trim();
-    if (!address) return;
-    connect({
-      address: address,
-      username: document.getElementById('username').value.trim(),
-      password: document.getElementById('password').value,
-    }, button);
-  });
+    function openManual() {
+      manual.hidden = false;
+      showManual.hidden = true;
+    }
+
+    function markInvalid(fields) {
+      [address, username, password].forEach(function (field) {
+        if (fields.indexOf(field) === -1) field.removeAttribute('aria-invalid');
+        else field.setAttribute('aria-invalid', 'true');
+      });
+    }
+
+    function hideError() {
+      errorBox.hidden = true;
+      markInvalid([]);
+      Array.prototype.forEach.call(readerList.querySelectorAll('[aria-describedby]'), function (row) {
+        row.removeAttribute('aria-describedby');
+      });
+    }
+
+    // The status line after a search or a failed connect: what was found, without asking for a
+    // tap that was just made.
+    function settledStatus(afterFailure) {
+      if (!found) return Homey.__('pair.none_found');
+      var key = found === 1 ? 'pair.found_one' : 'pair.found_many';
+      return Homey.__(afterFailure ? key + '_short' : key, { count: found });
+    }
+
+    // Shown next to what it is about, so it is near the action and not under the keyboard.
+    function showError(message, next, where) {
+      errorBox.textContent = message || Homey.__('pair.failed');
+      errorBox.hidden = false;
+      next.insertAdjacentElement(where || 'afterend', errorBox);
+      errorBox.scrollIntoView({ block: 'nearest' });
+    }
+
+    // A password is asked for only once a reader has said it needs one: under the reader's row
+    // with its own button, or in the manual form above "Koble til".
+    function openLogin(message, row) {
+      byId('login-note').textContent = message;
+      username.value = '';
+      password.value = '';
+      if (row) row.parentNode.appendChild(login);
+      else connectButton.insertAdjacentElement('beforebegin', login);
+      loginConnect.hidden = !row;
+      login.hidden = false;
+      login.scrollIntoView({ block: 'nearest' });
+      username.focus();
+    }
+
+    // A wrong login is most often the password: it is cleared and gets focus, unless the
+    // username is still empty.
+    function wrongLogin() {
+      markInvalid([username, password]);
+      password.value = '';
+      (username.value ? password : username).focus();
+    }
+
+    function closeLogin() {
+      loginFor = null;
+      login.hidden = true;
+      connectButton.insertAdjacentElement('beforebegin', login);
+    }
+
+    // While one request runs nothing else can start one: the reader serves a single client.
+    function setBusy(on, text) {
+      busy = on;
+      form.setAttribute('aria-busy', on ? 'true' : 'false');
+      Array.prototype.forEach.call(form.querySelectorAll('button, input'), function (el) { el.disabled = on; });
+      if (on) setStatus(text, true);
+    }
+
+    // During a search the list is rebuilt, so nothing can connect until it is done.
+    function setSearching(on) {
+      searching = on;
+      connectButton.disabled = on;
+      loginConnect.disabled = on;
+    }
+
+    // Runs the connect request. onBusy/onIdle switch the tapped control's own busy look;
+    // onError places the error and moves focus, unless the reader asked for a password.
+    function connect(request, busyText, onBusy, onIdle, onError, row) {
+      if (busy || searching) return;
+      hideError();
+      setBusy(true, busyText);
+      onBusy();
+      Homey.emit('connect', request).then(function (result) {
+        if (result && result.error) throw result.error;
+        return Homey.createDevice(result);
+      }).then(function () {
+        Homey.done();
+      }).catch(function (err) {
+        setBusy(false);
+        onIdle();
+        if (err && err.code === 'auth_required') {
+          setStatus(Homey.__('pair.login_needed'), false);
+          loginFor = row ? request : null;
+          openLogin(err.message, row);
+          return;
+        }
+        // A wrong login keeps the login open, so the status line still asks for one.
+        setStatus(err && err.code === 'auth' ? Homey.__('pair.login_needed') : settledStatus(true), false);
+        onError(err || {});
+      });
+    }
+
+    function chevron() {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 20 20');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.innerHTML = '<path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+      return svg;
+    }
+
+    // A tappable row with the reader's name and address.
+    function readerRow(reader) {
+      var row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'ams-reader';
+      var text = document.createElement('span');
+      text.className = 'ams-reader-text';
+      var name = document.createElement('span');
+      name.className = 'ams-reader-name';
+      name.textContent = reader.name;
+      var where = document.createElement('span');
+      where.className = 'ams-reader-address';
+      where.textContent = reader.address;
+      text.appendChild(name);
+      text.appendChild(where);
+      row.appendChild(text);
+      var icon = chevron();
+      row.appendChild(icon);
+      var spinner = document.createElement('span');
+      spinner.className = 'ams-spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      row.addEventListener('click', function () {
+        // Its login is already open: carry on there instead of trying again without it.
+        if (loginFor && loginFor.address === reader.address && !login.hidden) {
+          (username.value ? password : username).focus();
+          return;
+        }
+        if (loginFor) closeLogin();
+        connect({
+          address: reader.address, ssdpId: reader.ssdpId, discovered: true, name: reader.name,
+        }, Homey.__('pair.connecting_to', { name: reader.name }), function () {
+          row.classList.add('is-busy');
+          row.replaceChild(spinner, icon);
+        }, function () {
+          row.classList.remove('is-busy');
+          row.replaceChild(icon, spinner);
+        }, function (err) {
+          showError(err.message, row);
+          row.setAttribute('aria-describedby', 'error');
+          row.focus();
+        }, row);
+      });
+      return row;
+    }
+
+    // Found readers come first, one row each. The manual entry opens on request, or straight
+    // away when none were found. A new search is always on offer, for a reader that was still
+    // starting or has moved to a new address.
+    function showReaders(readers) {
+      setSearching(false);
+      searchAgain.hidden = false;
+      found = readers ? readers.length : 0;
+      setStatus(settledStatus(false), false);
+      if (!found) {
+        openManual();
+        return;
+      }
+      readers.forEach(function (reader) {
+        var item = document.createElement('li');
+        item.appendChild(readerRow(reader));
+        readerList.appendChild(item);
+      });
+      readerList.hidden = false;
+      if (manual.hidden) showManual.hidden = false;
+    }
+
+    function discover(moveFocus) {
+      setSearching(true);
+      hideError();
+      closeLogin();
+      searchAgain.hidden = true;
+      readerList.textContent = '';
+      readerList.hidden = true;
+      setStatus(Homey.__('pair.searching'), true);
+      Homey.emit('discover').catch(function () { return []; }).then(function (readers) {
+        showReaders(readers);
+        // The button that was pressed hid itself, so focus goes on to what the search found.
+        if (!moveFocus) return;
+        var first = readerList.querySelector('.ams-reader');
+        if (first) first.focus();
+        else address.focus();
+      });
+    }
+
+    discover(false);
+
+    searchAgain.addEventListener('click', function () { discover(true); });
+    showManual.addEventListener('click', function () {
+      openManual();
+      address.focus();
+    });
+    form.addEventListener('input', hideError);
+    username.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      password.focus();
+    });
+
+    // Submitting is either the login under a found reader's row, or the manual form.
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      // Enter picks the first submit button, so where focus is decides; Safari does not focus
+      // a tapped button, which then only shows as the submitter.
+      var active = document.activeElement;
+      var fromLogin = login.contains(active) || (event.submitter === loginConnect && !manual.contains(active));
+      if (loginFor && fromLogin) {
+        var reader = loginFor;
+        connect({
+          address: reader.address,
+          ssdpId: reader.ssdpId,
+          discovered: true,
+          name: reader.name,
+          username: username.value.trim(),
+          password: password.value,
+        }, Homey.__('pair.connecting_to', { name: reader.name }), function () {
+          loginConnect.classList.add('is-loading');
+          loginConnect.textContent = Homey.__('pair.connecting');
+        }, function () {
+          loginConnect.classList.remove('is-loading');
+          loginConnect.textContent = Homey.__('pair.connect');
+        }, function (err) {
+          showError(err.message, loginConnect, 'beforebegin');
+          if (err.code === 'auth') wrongLogin();
+          else username.focus();
+        });
+        return;
+      }
+
+      var host = address.value.trim();
+      if (!host) {
+        markInvalid([address]);
+        showError(Homey.__('pair.address_missing'), connectButton, 'beforebegin');
+        address.focus();
+        return;
+      }
+      connect({
+        address: host,
+        username: loginFor ? '' : username.value.trim(),
+        password: loginFor ? '' : password.value,
+      }, Homey.__('pair.connecting_to', { name: host }), function () {
+        connectButton.classList.add('is-loading');
+        connectButton.textContent = Homey.__('pair.connecting');
+      }, function () {
+        connectButton.classList.remove('is-loading');
+        connectButton.textContent = Homey.__('pair.connect');
+      }, function (err) {
+        showError(err.message, connectButton, 'beforebegin');
+        if (err.code === 'auth') {
+          wrongLogin();
+          return;
+        }
+        markInvalid([address]);
+        address.focus();
+      });
+    });
+  })();
 </script>
