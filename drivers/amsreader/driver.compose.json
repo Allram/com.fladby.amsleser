@@ -164,7 +164,7 @@
     {
       "id": "estimate_l2",
       "type": "checkbox",
-      "value": true,
+      "value": false,
       "label": {
         "en": "Estimate current L2",
         "no": "Anslå strøm L2"

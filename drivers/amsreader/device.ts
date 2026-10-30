@@ -12,7 +12,7 @@ class AmsReaderDevice extends Homey.Device {
   private polling = false;
   // Bumped by restart() and onUninit(), so a poll that was under way drops its result.
   private generation = 0;
-  private estimateL2 = true;
+  private estimateL2 = false;
   private failures = 0;
   private meterWasOk?: boolean;
   private lastHourUsage?: number;
@@ -90,7 +90,7 @@ class AmsReaderDevice extends Homey.Device {
     this.unsetWarning().catch(this.error);
     this.client = new AmsClient(settings.address, settings.username, settings.password);
     // Read from the new settings, as onSettings() runs before getSetting() returns them.
-    this.estimateL2 = settings.estimate_l2 !== false;
+    this.estimateL2 = settings.estimate_l2 === true;
     this.generation++;
     this.stopPolling();
     this.timer = this.homey.setInterval(() => this.poll(), settings.poll_interval * 1000);

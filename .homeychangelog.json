@@ -1,4 +1,8 @@
 {
+  "0.5.1": {
+    "en": "The estimated current on L2 is now off by default on newly added readers, as it can be far off when the load is uneven. You can turn it on in the device settings.",
+    "no": "Anslått strøm på L2 er nå av som standard på nye lesere, fordi tallet kan bomme mye når lasten er ujevn. Du kan slå det på i innstillingene til enheten."
+  },
   "0.5.0": {
     "en": "Safer on shared networks: a reader with a password is no longer moved to a new address on its own, so its password only goes to the address you entered. If it seems to have moved, the device shows a warning with the new address. A reader without a password is only followed when the new address answers as the same reader.",
     "no": "Tryggere på delte nettverk: en leser med passord flyttes ikke lenger til en ny adresse av seg selv, så passordet bare sendes til adressen du har skrevet inn. Ser den ut til å ha flyttet, viser enheten et varsel med den nye adressen. En leser uten passord følges bare når den nye adressen svarer som samme leser."
