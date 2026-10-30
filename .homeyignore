@@ -3,3 +3,5 @@ node_modules/
 test/
 tsconfig.test.json
 .forgejo/
+CLAUDE.md
+SECURITY.md
