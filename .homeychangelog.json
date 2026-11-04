@@ -1,4 +1,8 @@
 {
+  "0.5.2": {
+    "en": "New pictures of the AMS reader in the app and when you add a device.",
+    "no": "Nye bilder av AMS-leseren i appen og når du legger til en enhet."
+  },
   "0.5.1": {
     "en": "The estimated current on L2 is now off by default on newly added readers, as it can be far off when the load is uneven. You can turn it on in the device settings.",
     "no": "Anslått strøm på L2 er nå av som standard på nye lesere, fordi tallet kan bomme mye når lasten er ujevn. Du kan slå det på i innstillingene til enheten."
